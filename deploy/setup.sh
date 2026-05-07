@@ -1,67 +1,99 @@
 #!/bin/bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  SimulSolaire — Script de setup initial (VPS Ubuntu/Debian)  ║
-# ║  Usage : bash setup.sh votredomaine.com                       ║
+# ║  SimulSolaire — Setup VPS Hostinger                          ║
+# ║  Domaine : simulateur.innoveagroup.tech                       ║
 # ╚══════════════════════════════════════════════════════════════╝
 set -e
 
-DOMAIN=${1:-"votredomaine.com"}
+DOMAIN="simulateur.innoveagroup.tech"
 APP_DIR="/var/www/simulsolaire"
 REPO="https://github.com/Keths21/simulsolaire-guinee.git"
+EMAIL="admin@innoveagroup.tech"   # email pour Let's Encrypt
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  SimulSolaire — Setup VPS"
 echo "  Domaine : $DOMAIN"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Répertoire : $APP_DIR"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 1. Mise à jour système
-echo "📦 Mise à jour du système..."
+echo ""
+echo "📦 [1/6] Mise à jour du système..."
 apt-get update -qq && apt-get upgrade -y -qq
 
-# 2. Installation Nginx + Git + Certbot
-echo "🔧 Installation Nginx, Git, Certbot..."
-apt-get install -y -qq nginx git certbot python3-certbot-nginx
+# 2. Installation des dépendances
+echo "🔧 [2/6] Installation Nginx, Git, Certbot..."
+apt-get install -y -qq nginx git certbot python3-certbot-nginx ufw
 
-# 3. Cloner le dépôt
-echo "📥 Clonage du dépôt..."
+# 3. Firewall
+echo "🛡️  [3/6] Configuration du firewall..."
+ufw allow OpenSSH
+ufw allow 'Nginx Full'
+ufw --force enable
+
+# 4. Cloner le dépôt
+echo "📥 [4/6] Clonage du dépôt GitHub..."
 mkdir -p "$APP_DIR"
 if [ -d "$APP_DIR/.git" ]; then
+    echo "  → Dépôt existant, mise à jour..."
     cd "$APP_DIR" && git pull origin main
 else
     git clone "$REPO" "$APP_DIR"
 fi
 chown -R www-data:www-data "$APP_DIR"
+chmod -R 755 "$APP_DIR"
 
-# 4. Config Nginx
-echo "⚙️  Configuration Nginx..."
-sed "s/votredomaine.com/$DOMAIN/g" "$APP_DIR/deploy/nginx.conf" \
-    > /etc/nginx/sites-available/simulsolaire
+# 5. Configuration Nginx
+echo "⚙️  [5/6] Configuration Nginx..."
+cp "$APP_DIR/deploy/nginx.conf" /etc/nginx/sites-available/simulsolaire
 
-# Désactiver le site par défaut, activer le nôtre
+# Désactiver site par défaut, activer simulsolaire
 rm -f /etc/nginx/sites-enabled/default
 ln -sf /etc/nginx/sites-available/simulsolaire /etc/nginx/sites-enabled/simulsolaire
 
-# Test config Nginx
-nginx -t
+# Créer une config HTTP temporaire pour Certbot (sans SSL d'abord)
+cat > /etc/nginx/sites-available/simulsolaire-temp << 'TMPCONF'
+server {
+    listen 80;
+    server_name simulateur.innoveagroup.tech;
+    root /var/www/simulsolaire;
+    location /.well-known/acme-challenge/ { root /var/www/html; }
+    location / { try_files $uri $uri/ /index.html; }
+}
+TMPCONF
 
-# 5. Démarrer / recharger Nginx
-echo "🚀 Démarrage Nginx..."
-systemctl enable nginx
-systemctl restart nginx
+ln -sf /etc/nginx/sites-available/simulsolaire-temp /etc/nginx/sites-enabled/simulsolaire
+rm -f /etc/nginx/sites-enabled/simulsolaire
+nginx -t && systemctl restart nginx
 
 # 6. Certificat SSL Let's Encrypt
-echo "🔒 Génération du certificat SSL..."
-certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" \
-    --non-interactive --agree-tos -m "admin@$DOMAIN" \
+echo "🔒 [6/6] Certificat SSL Let's Encrypt..."
+certbot --nginx \
+    -d "$DOMAIN" \
+    --non-interactive \
+    --agree-tos \
+    -m "$EMAIL" \
     --redirect
 
-# 7. Rechargement final
-systemctl reload nginx
+# Activer la vraie config (avec SSL)
+ln -sf /etc/nginx/sites-available/simulsolaire /etc/nginx/sites-enabled/simulsolaire
+rm -f /etc/nginx/sites-enabled/simulsolaire-temp
+rm -f /etc/nginx/sites-available/simulsolaire-temp
+
+nginx -t && systemctl reload nginx
+
+# Renouvellement automatique SSL
+echo "🔁 Renouvellement SSL automatique (cron)..."
+(crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet && systemctl reload nginx") | crontab -
 
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅ Déploiement terminé !"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ✅ Déploiement terminé avec succès !"
+echo ""
 echo "  🌐 https://$DOMAIN"
 echo "  📱 https://$DOMAIN/mobile.html"
 echo "  🗺️  https://$DOMAIN/carte.html"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "  Pour les mises à jour futures :"
+echo "  bash /var/www/simulsolaire/deploy/update.sh"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

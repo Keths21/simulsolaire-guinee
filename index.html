@@ -368,6 +368,14 @@
       color: var(--text);
     }
     .cost-line:last-child { border-bottom: none; }
+    .cost-cat-head {
+      font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-light);
+      background: var(--border); padding: 4px 8px; margin: 6px -14px 3px;
+    }
+    .cost-line.sub { padding-left: 8px; font-size: 0.76rem; color: var(--text-light); }
+    .cost-line.sub strong { color: var(--text); }
+    .cost-line.component { font-weight: 600; }
     .cost-line.total {
       font-weight: 800; color: var(--secondary);
       padding-top: 7px; margin-top: 3px; border-top: 2px solid var(--border);
@@ -1030,18 +1038,115 @@ function calcComponents(totalWh) {
   const priceBat   = (PRICES[bKey(batAh, voltage)] || 0) * batQty;
   const priceCtrl  = PRICES[cKey(ctrlA)] || 0;
   const priceInv   = sysType === 'ac' ? (PRICES[iKey(invW)] || 0) : 0;
-  const priceAccess= Math.round((pricePanel + priceBat + priceCtrl + priceInv) * 0.15);
+  const accDetail  = calcAccessoriesDetail({ panelW, panelQty, batAh, batQty, ctrlA, invW, sysType, voltage });
+  const priceAccess= accDetail.reduce((s, it) => s + it.total, 0);
   const totalPrice = pricePanel + priceBat + priceCtrl + priceInv + priceAccess;
 
   const dailyProd = panelW * panelQty * psh * EFF_SYS;
 
   return {
     panelW, panelQty, batAh, batQty, ctrlA, invW, voltage, sysType,
-    pricePanel, priceBat, priceCtrl, priceInv, priceAccess, totalPrice,
+    pricePanel, priceBat, priceCtrl, priceInv, priceAccess, accDetail, totalPrice,
     dailyProd: Math.round(dailyProd),
     reqPanelW: Math.round(reqPanelW),
     reqBatAh: Math.round(reqBatAh),
   };
+}
+
+/* ════════════════════════════════════════════════════════════
+   DÉTAIL DES ACCESSOIRES
+════════════════════════════════════════════════════════════ */
+function calcAccessoriesDetail({ panelW, panelQty, batAh, batQty, ctrlA, invW, sysType, voltage }) {
+  const ac = sysType === 'ac';
+
+  // Longueurs câbles adaptées à la taille du kit
+  const cSolM  = Math.max(8,  panelQty * 5);          // 5m/panneau rouge + noir
+  const cBatM  = batQty <= 2 ? 2 : batQty <= 4 ? 4 : 6;
+  const cAcM   = 12;
+  const cIntM  = Math.max(6, panelQty * 2);            // câble inter-panneaux
+
+  // Taille disjoncteur DC selon contrôleur
+  const djDCamp = ctrlA <= 30 ? 40 : ctrlA <= 60 ? 63 : 100;
+
+  const items = [
+    // ── Câblage DC ──────────────────────────────────────────
+    { cat:'Câblage DC',
+      name:`Câble solaire 6mm² rouge — ${cSolM} m`, qty:1, u: cSolM * 7000 },
+    { cat:'Câblage DC',
+      name:`Câble solaire 6mm² noir — ${cSolM} m`,  qty:1, u: cSolM * 7000 },
+    { cat:'Câblage DC',
+      name:`Câble inter-panneaux 4mm² — ${cIntM} m`, qty:1, u: cIntM * 5500 },
+    { cat:'Câblage DC',
+      name:`Câble batterie cuivre 35mm² rouge — ${cBatM} m`, qty:1, u: cBatM * 16000 },
+    { cat:'Câblage DC',
+      name:`Câble batterie cuivre 35mm² noir — ${cBatM} m`,  qty:1, u: cBatM * 16000 },
+
+    // ── Câblage AC (si onduleur) ────────────────────────────
+    ...(ac ? [
+      { cat:'Câblage AC',
+        name:`Câble AC 2.5mm² sortie onduleur — ${cAcM} m`, qty:1, u: cAcM * 5500 },
+      { cat:'Câblage AC',
+        name:'Câble AC 4mm² tableau distribution — 5 m', qty:1, u: 5 * 7000 },
+    ] : []),
+
+    // ── Connectique ─────────────────────────────────────────
+    { cat:'Connectique',
+      name:'Connecteurs MC4 mâle/femelle (paires)', qty: panelQty, u: 8500 },
+    { cat:'Connectique',
+      name:'Cosses à sertir cuivre 35mm² (jeu/batterie)', qty: batQty, u: 14000 },
+    { cat:'Connectique',
+      name:'Bornes de jonction et dominos (lot)', qty: 1, u: 18000 },
+    { cat:'Connectique',
+      name:'Connecteurs Anderson (jeu)', qty: 1, u: 22000 },
+
+    // ── Protection électrique ───────────────────────────────
+    { cat:'Protection électrique',
+      name:`Disjoncteur DC ${djDCamp}A (protection panneaux→régulateur)`, qty:1, u: 48000 },
+    { cat:'Protection électrique',
+      name:`Disjoncteur DC ${djDCamp}A (protection batterie→régulateur)`, qty:1, u: 48000 },
+    ...(ac ? [
+      { cat:'Protection électrique',
+        name:`Disjoncteur AC bipolaire 32A (sortie onduleur)`, qty:1, u: 38000 },
+    ] : []),
+    { cat:'Protection électrique',
+      name:'Fusible batterie + porte-fusible 125A', qty: Math.max(1, batQty), u: 22000 },
+    { cat:'Protection électrique',
+      name:'Parafoudre DC type 2 (protection foudre panneaux)', qty:1, u: 58000 },
+    ...(ac ? [
+      { cat:'Protection électrique',
+        name:'Parafoudre AC type 2 (protection sortie onduleur)', qty:1, u: 48000 },
+    ] : []),
+    { cat:'Protection électrique',
+      name:'Interrupteur sectionneur DC 63A', qty:1, u: 35000 },
+
+    // ── Structure & fixation ────────────────────────────────
+    { cat:'Structure & fixation',
+      name:'Profilé aluminium anodisé fixation panneau', qty: panelQty, u: 58000 },
+    { cat:'Structure & fixation',
+      name:'Équerre de montage inox (jeu/panneau)', qty: panelQty, u: 12000 },
+    { cat:'Structure & fixation',
+      name:'Boulonnerie inox M8 + rondelles (lot)', qty:1, u: 20000 },
+    { cat:'Structure & fixation',
+      name:'Câble de mise à la terre 6mm² vert/jaune — 4 m', qty:1, u: 4 * 6500 },
+    { cat:'Structure & fixation',
+      name:'Piquet de terre cuivre 1.5 m', qty:1, u: 35000 },
+
+    // ── Coffret & installation ──────────────────────────────
+    { cat:'Coffret & installation',
+      name:'Coffret électrique IP65 avec rail DIN 35mm', qty:1, u: 95000 },
+    { cat:'Coffret & installation',
+      name:'Gaines corrugées ICTA ∅25 — 10 m', qty:1, u: 28000 },
+    { cat:'Coffret & installation',
+      name:'Gaines rigides PVC ∅20 — 5 m', qty:1, u: 18000 },
+    { cat:'Coffret & installation',
+      name:'Colliers de fixation et attaches câbles (lot)', qty:1, u: 12000 },
+    { cat:'Coffret & installation',
+      name:'Presse-étoupes et joints (lot)', qty:1, u: 15000 },
+    { cat:'Coffret & installation',
+      name:'Ruban isolant + consommables installation', qty:1, u: 12000 },
+  ];
+
+  return items.map(it => ({ ...it, total: it.qty * it.u }));
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1077,13 +1182,30 @@ function renderKitResult(totalWh, comp) {
     `Notice de montage + support technique`,
   ].map(c => `<li><span class="ck">✓</span> ${c}</li>`).join('');
 
-  const costLines = [
-    ['Panneaux solaires', comp.pricePanel],
-    ['Batteries', comp.priceBat],
-    ['Régulateur MPPT', comp.priceCtrl],
-    ...(comp.sysType === 'ac' ? [['Onduleur', comp.priceInv]] : []),
-    ['Câbles & accessoires', comp.priceAccess],
-  ].map(([l, v]) => `<div class="cost-line"><span>${l}</span><strong>${fmtGNF(v)}</strong></div>`).join('');
+  // ── Composants principaux ──
+  const mainLines = [
+    [`Panneaux solaires (${comp.panelQty} × ${comp.panelW}W monocristallin)`, comp.pricePanel],
+    [`Batteries ${comp.sysType==='ac'?'GEL':'AGM'} (${comp.batQty} × ${comp.batAh}Ah ${comp.voltage}V)`, comp.priceBat],
+    [`Régulateur MPPT ${comp.ctrlA}A`, comp.priceCtrl],
+    ...(comp.sysType === 'ac' ? [[`Onduleur pur sinus ${comp.invW}W`, comp.priceInv]] : []),
+  ].map(([l, v]) => `<div class="cost-line component"><span>${l}</span><strong>${fmtGNF(v)}</strong></div>`).join('');
+
+  // ── Accessoires détaillés groupés par catégorie ──
+  const accByCat = {};
+  comp.accDetail.forEach(it => {
+    if (!accByCat[it.cat]) accByCat[it.cat] = [];
+    accByCat[it.cat].push(it);
+  });
+  const accLines = Object.entries(accByCat).map(([cat, items]) => `
+    <div class="cost-cat-head">${cat}</div>
+    ${items.map(it => `
+      <div class="cost-line sub">
+        <span>${it.name}${it.qty > 1 ? ` <em style="color:var(--text-light)">× ${it.qty}</em>` : ''}</span>
+        <strong>${fmtGNF(it.total)}</strong>
+      </div>`).join('')}
+  `).join('');
+
+  const costLines = mainLines + accLines;
 
   document.getElementById('kitResult').innerHTML = `
     <div class="kit-card fade-up">
@@ -1114,7 +1236,12 @@ function renderKitResult(totalWh, comp) {
 
     <div class="cost-breakdown">
       <h4>Détail du devis estimatif</h4>
+      <div class="cost-cat-head" style="margin-top:0">Équipements principaux</div>
       ${costLines}
+      <div class="cost-line" style="font-weight:700;border-top:1px solid var(--border);margin-top:4px;padding-top:6px">
+        <span>Sous-total accessoires & installation</span>
+        <strong>${fmtGNF(comp.priceAccess)}</strong>
+      </div>
       <div class="cost-line total"><span>Total estimé</span><strong>${fmtGNF(comp.totalPrice)}</strong></div>
     </div>
 

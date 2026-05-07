@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="SimulSolaire"/>
+  <meta name="theme-color" content="#E8751A"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon.svg"/>
+  <title>SimulSolaire Guinée</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --pri: #E8751A; --pri-d: #C05E0F;
+      --sec: #1A3A5C; --acc: #FCD116;
+      --grn: #27AE60; --red: #E74C3C;
+      --bg: #F0F4F8; --wh: #fff;
+      --txt: #1C2B3A; --txt2: #6B7280;
+      --brd: #E5E7EB; --rad: 16px; --rads: 12px;
+      --sh: 0 2px 12px rgba(0,0,0,.08);
+      --shl: 0 8px 32px rgba(0,0,0,.16);
+      --sat: env(safe-area-inset-top,0px);
+      --sab: env(safe-area-inset-bottom,0px);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;overflow:hidden;
+      font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+      background:var(--bg);color:var(--txt);font-size:15px}
+
+    /* ── HEADER ─────────────────────────────────── */
+    .hdr{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      background:var(--sec);
+      padding:calc(10px + var(--sat)) 16px 10px;
+      display:flex;align-items:center;gap:10px;
+      box-shadow:0 2px 16px rgba(0,0,0,.25);
+    }
+    .hdr-logo{
+      width:36px;height:36px;background:var(--acc);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+    }
+    .hdr-title h1{color:#fff;font-size:.95rem;font-weight:800}
+    .hdr-title p{color:rgba(255,255,255,.65);font-size:.65rem;margin-top:1px}
+    .step-dots{margin-left:auto;display:flex;gap:5px;align-items:center}
+    .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .3s}
+    .dot.done{background:var(--grn)}
+    .dot.cur{width:22px;border-radius:4px;background:var(--acc)}
+
+    /* ── BOTTOM NAV ──────────────────────────────── */
+    .nav{
+      position:fixed;bottom:0;left:0;right:0;z-index:100;
+      background:var(--wh);border-top:1px solid var(--brd);
+      display:flex;padding-bottom:var(--sab);
+      box-shadow:0 -4px 20px rgba(0,0,0,.07);
+    }
+    .ni{
+      flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+      padding:9px 4px 7px;cursor:pointer;border:none;background:none;
+      font-family:inherit;color:var(--txt2);transition:color .2s;position:relative;
+    }
+    .ni.act{color:var(--pri)}
+    .ni-ic{font-size:22px;transition:transform .2s}
+    .ni.act .ni-ic{transform:scale(1.1)}
+    .ni-lb{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+    .ni-badge{
+      position:absolute;top:5px;right:calc(50% - 18px);
+      background:var(--red);color:#fff;font-size:.55rem;font-weight:800;
+      min-width:16px;height:16px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;padding:0 3px;
+    }
+
+    /* ── VIEWS ───────────────────────────────────── */
+    .view-wrap{position:fixed;inset:0;overflow:hidden}
+    .view{
+      position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+      padding:calc(56px + var(--sat) + 10px) 16px calc(58px + var(--sab) + 10px);
+      transform:translateX(100%);
+      transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;
+    }
+    .view.act{transform:translateX(0)}
+    .view.prv{transform:translateX(-28%)}
+
+    /* ── TYPOGRAPHY HELPERS ──────────────────────── */
+    .sec-head{
+      font-size:.7rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.6px;color:var(--txt2);margin-bottom:9px;
+    }
+    .card{background:var(--wh);border-radius:var(--rad);box-shadow:var(--sh);margin-bottom:12px}
+    .cp{padding:15px}
+
+    /* ─────────────────────────────────────────────
+       VIEW 1 — CONFIG
+    ───────────────────────────────────────────── */
+    .region-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+    .rc{
+      background:var(--wh);border-radius:var(--rads);border:2.5px solid var(--brd);
+      padding:14px 8px;cursor:pointer;text-align:center;
+      transition:all .2s;box-shadow:var(--sh);
+    }
+    .rc.act{border-color:var(--pri);background:#FFF5ED;box-shadow:0 0 0 1px var(--pri),var(--sh)}
+    .rc .ri{font-size:26px;display:block;margin-bottom:5px}
+    .rc .rn{font-size:.8rem;font-weight:700;color:var(--txt)}
+    .rc .rs{font-size:.65rem;color:var(--txt2);margin-top:1px}
+
+    .tpair{display:flex;gap:8px;margin-bottom:14px}
+    .tbtn{
+      flex:1;padding:12px 6px;border-radius:var(--rads);border:2px solid var(--brd);
+      background:var(--wh);font-size:.85rem;font-weight:600;cursor:pointer;
+      transition:all .2s;color:var(--txt);font-family:inherit;
+    }
+    .tbtn.act{border-color:var(--pri);background:var(--pri);color:#fff}
+
+    .pills{display:flex;gap:8px;margin-bottom:14px}
+    .pill{
+      flex:1;padding:11px 6px;border-radius:30px;border:2px solid var(--brd);
+      background:var(--wh);font-size:.9rem;font-weight:700;cursor:pointer;
+      transition:all .2s;color:var(--txt);font-family:inherit;text-align:center;
+    }
+    .pill.act{border-color:var(--sec);background:var(--sec);color:#fff}
+
+    .info-box{
+      background:linear-gradient(135deg,var(--sec),#0D2340);
+      border-radius:var(--rad);padding:16px;margin-bottom:14px;color:#fff;
+    }
+    .info-box h3{font-size:.9rem;font-weight:800;margin-bottom:6px;color:var(--acc)}
+    .info-box p{font-size:.78rem;line-height:1.5;opacity:.85}
+
+    .next-btn{
+      width:100%;padding:16px;background:var(--pri);color:#fff;border:none;
+      border-radius:var(--rad);font-size:1rem;font-weight:800;cursor:pointer;
+      font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;
+      box-shadow:0 4px 16px rgba(232,117,26,.4);transition:all .2s;margin-top:4px;
+    }
+    .next-btn:active{transform:scale(.98)}
+
+    /* ─────────────────────────────────────────────
+       VIEW 2 — APPAREILS
+    ───────────────────────────────────────────── */
+    .cat-wrap{
+      position:sticky;top:0;z-index:10;background:var(--bg);
+      padding:8px 0 6px;margin:0 -16px 10px;
+    }
+    .cat-scroll{
+      display:flex;gap:8px;overflow-x:auto;padding:0 16px;scrollbar-width:none;
+    }
+    .cat-scroll::-webkit-scrollbar{display:none}
+    .cc{
+      flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;
+      padding:7px 12px;border-radius:30px;background:var(--wh);
+      border:2px solid var(--brd);cursor:pointer;transition:all .2s;font-family:inherit;
+    }
+    .cc.act{background:var(--pri);border-color:var(--pri);color:#fff}
+    .cc .ci{font-size:18px}
+    .cc .cn{font-size:.62rem;font-weight:700;white-space:nowrap}
+
+    .app-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:90px}
+    .ac{
+      background:var(--wh);border:2px solid var(--brd);border-radius:var(--rads);
+      padding:14px 10px;cursor:pointer;display:flex;flex-direction:column;
+      align-items:center;gap:5px;text-align:center;transition:all .2s;
+      position:relative;box-shadow:var(--sh);user-select:none;
+    }
+    .ac:active{transform:scale(.96)}
+    .ac.add{border-color:var(--grn);background:#F0FFF5}
+    .ac .ai{font-size:28px}
+    .ac .an{font-size:.74rem;font-weight:700;line-height:1.3;color:var(--txt)}
+    .ac .ap{font-size:.68rem;font-weight:700;color:var(--pri)}
+    .abadge{
+      position:absolute;top:6px;right:6px;background:var(--grn);color:#fff;
+      font-size:.58rem;font-weight:800;min-width:18px;height:18px;border-radius:9px;
+      display:flex;align-items:center;justify-content:center;padding:0 3px;
+    }
+
+    /* Floating total */
+    .float-bar{
+      position:fixed;bottom:calc(58px + var(--sab));left:0;right:0;
+      z-index:50;padding:0 16px 8px;pointer-events:none;
+    }
+    .fb-inner{
+      background:var(--sec);border-radius:var(--rad);padding:12px 16px;
+      display:flex;align-items:center;gap:12px;box-shadow:var(--shl);
+      pointer-events:all;transition:transform .3s,opacity .3s;
+    }
+    .float-bar.hidden .fb-inner{transform:translateY(20px);opacity:0;pointer-events:none}
+    .fb-txt{flex:1}
+    .fb-count{font-size:.7rem;color:rgba(255,255,255,.7)}
+    .fb-val{font-size:1.15rem;font-weight:800;color:var(--acc)}
+    .fb-btn{
+      background:var(--pri);color:#fff;border:none;border-radius:10px;
+      padding:9px 14px;font-size:.82rem;font-weight:700;cursor:pointer;
+      font-family:inherit;white-space:nowrap;
+    }
+
+    /* ─────────────────────────────────────────────
+       VIEW 3 — RÉSULTATS
+    ───────────────────────────────────────────── */
+    .meter{background:var(--sec);border-radius:var(--rad);padding:15px;margin-bottom:12px}
+    .mrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .mrow:last-child{margin-bottom:0}
+    .mlbl{color:rgba(255,255,255,.8);font-size:.73rem;font-weight:600;min-width:110px}
+    .mtrk{flex:1;height:14px;background:rgba(255,255,255,.12);border-radius:7px;overflow:hidden}
+    .mfill{height:100%;border-radius:7px;transition:width .6s}
+    .mfill.prod{background:linear-gradient(90deg,#27AE60,#2ECC71)}
+    .mfill.conso{background:linear-gradient(90deg,var(--pri),#F5A623)}
+    .mfill.over{background:linear-gradient(90deg,#C0392B,var(--red))}
+    .mval{color:#fff;font-size:.76rem;font-weight:700;min-width:72px;text-align:right}
+
+    .kit-card-m{
+      background:linear-gradient(145deg,#0D2340,var(--sec));
+      border-radius:var(--rad);color:#fff;padding:18px;margin-bottom:12px;
+    }
+    .kcm-badge{
+      display:inline-block;background:var(--acc);color:var(--sec);
+      font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;
+      text-transform:uppercase;margin-bottom:8px;
+    }
+    .kcm-name{font-size:1.3rem;font-weight:800;margin-bottom:3px}
+    .kcm-sub{font-size:.77rem;opacity:.75;margin-bottom:13px}
+    .kcm-comps{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+    .kcm-comps li{display:flex;align-items:flex-start;gap:7px;font-size:.82rem;line-height:1.4}
+    .kcm-comps .ck{color:#2ECC71;flex-shrink:0;font-size:13px;margin-top:1px}
+    .kcm-price{border-top:1px solid rgba(255,255,255,.2);padding-top:12px}
+    .kcm-gnf{font-size:1.6rem;font-weight:800;color:var(--acc)}
+    .kcm-usd{font-size:.78rem;opacity:.7;margin-top:1px}
+    .kcm-note{font-size:.65rem;opacity:.5;margin-top:3px}
+
+    .stats2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .stat-m{background:var(--wh);border-radius:var(--rads);padding:12px;text-align:center;box-shadow:var(--sh)}
+    .stat-m .sv{font-size:1.15rem;font-weight:800;color:var(--pri)}
+    .stat-m .sl{font-size:.66rem;color:var(--txt2);font-weight:600;margin-top:1px}
+
+    .cov-card{background:var(--wh);border-radius:var(--rads);padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
+    .covh{display:flex;justify-content:space-between;margin-bottom:7px}
+    .covh .cl{font-size:.8rem;font-weight:700;color:var(--txt2)}
+    .covh .cp-pct{font-size:1rem;font-weight:800}
+    .cov-trk{height:11px;background:var(--bg);border-radius:6px;overflow:hidden}
+    .cov-fill{height:100%;border-radius:6px;transition:width .6s,background .3s}
+
+    .bnr{border-radius:var(--rads);padding:10px 13px;font-size:.8rem;margin-bottom:12px;line-height:1.4}
+    .bnr.ok{background:#D4EDDA;color:#155724}
+    .bnr.warn{background:#FEF3CD;color:#7D5A00}
+    .bnr.err{background:#F8D7DA;color:#721C24}
+
+    /* Accordéon appareils dans résultats */
+    .accord{background:var(--wh);border-radius:var(--rads);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden}
+    .accord-hd{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 16px;cursor:pointer;user-select:none;
+    }
+    .accord-hd span{font-size:.88rem;font-weight:700}
+    .accord-arr{font-size:11px;transition:transform .25s;color:var(--txt2)}
+    .accord-bd{max-height:0;overflow:hidden;transition:max-height .35s ease}
+    .accord-bd.open{max-height:600px}
+    .accord-inner{padding:0 16px 12px}
+    .si{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--brd);font-size:.82rem}
+    .si:last-child{border-bottom:none}
+    .si-icon{font-size:18px;flex-shrink:0}
+    .si-name{flex:1;line-height:1.3}
+    .si-qty{font-size:.72rem;color:var(--txt2)}
+    .si-val{font-weight:700;color:var(--pri);white-space:nowrap}
+
+    /* Coût */
+    .cost-card{background:var(--wh);border-radius:var(--rads);padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
+    .cost-card h4{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt2);margin-bottom:10px}
+    .cl{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--brd);font-size:.82rem}
+    .cl:last-child{border-bottom:none}
+    .cl.tot{font-weight:800;font-size:.9rem;color:var(--sec);border-bottom:none;border-top:2px solid var(--brd);padding-top:10px;margin-top:2px}
+
+    /* CTA results */
+    .res-ctas{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+    .ctam{
+      width:100%;padding:16px;border:none;border-radius:var(--rads);
+      font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;
+      display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;
+    }
+    .ctam:active{transform:scale(.98)}
+    .ctam.wa{background:#25D366;color:#fff;box-shadow:0 4px 16px rgba(37,211,102,.35)}
+    .ctam.em{background:#3B82F6;color:#fff;box-shadow:0 4px 16px rgba(59,130,246,.3)}
+    .ctam.pr{background:var(--sec);color:#fff;box-shadow:var(--sh)}
+    .ctam.sk{background:transparent;color:var(--sec);border:2px solid var(--sec)}
+    .ctam.loading{opacity:.6;pointer-events:none}
+
+    /* Empty results */
+    .empty-r{text-align:center;padding:50px 20px;color:var(--txt2)}
+    .empty-r .ei{font-size:64px;display:block;margin-bottom:12px}
+    .empty-r p{font-size:.9rem;line-height:1.6}
+    .empty-r button{
+      margin-top:16px;padding:12px 24px;background:var(--pri);color:#fff;
+      border:none;border-radius:30px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;
+    }
+
+    /* ─────────────────────────────────────────────
+       BOTTOM SHEET — DEVIS
+    ───────────────────────────────────────────── */
+    .sheet-ov{
+      position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);
+      opacity:0;pointer-events:none;transition:opacity .3s;
+    }
+    .sheet-ov.show{opacity:1;pointer-events:all}
+    .sheet{
+      position:fixed;bottom:0;left:0;right:0;z-index:201;
+      background:var(--wh);border-radius:24px 24px 0 0;
+      padding:16px 20px calc(20px + var(--sab));
+      max-height:90vh;overflow-y:auto;
+      transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    .sheet-ov.show .sheet{transform:translateY(0)}
+    .sh-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 14px;cursor:grab}
+    .sheet h2{font-size:1.1rem;font-weight:800;margin-bottom:3px}
+    .sheet p{font-size:.78rem;color:var(--txt2);margin-bottom:14px}
+    .sh-sum{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.76rem;color:var(--txt2);margin-bottom:14px}
+    .fg{margin-bottom:12px}
+    .fg label{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt2);margin-bottom:4px}
+    .fg input,.fg textarea{
+      width:100%;border:1.5px solid var(--brd);border-radius:10px;
+      padding:12px;font-size:.9rem;outline:none;color:var(--txt);
+      transition:border-color .2s;font-family:inherit;background:var(--bg);
+    }
+    .fg input:focus,.fg textarea:focus{border-color:var(--pri);background:var(--wh)}
+    .fg textarea{min-height:70px;resize:none}
+    .ph-prev{font-size:.73rem;color:var(--grn);margin-top:4px;font-weight:600;min-height:18px}
+    .sh-acts{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+
+    /* ── TOAST ── */
+    .toast{
+      position:fixed;bottom:calc(68px + var(--sab));left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:var(--sec);color:#fff;padding:10px 20px;border-radius:20px;
+      font-size:.82rem;font-weight:600;box-shadow:var(--shl);
+      opacity:0;transition:all .3s;z-index:300;white-space:nowrap;pointer-events:none;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* ── INSTALL BANNER ── */
+    #inst-banner{
+      position:fixed;top:calc(56px + var(--sat));left:0;right:0;z-index:90;
+      background:var(--acc);color:var(--sec);
+      padding:9px 16px;display:none;align-items:center;gap:10px;font-size:.8rem;font-weight:600;
+    }
+    #inst-banner button{
+      margin-left:auto;flex-shrink:0;background:var(--sec);color:var(--acc);
+      border:none;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer;font-family:inherit;
+    }
+    #inst-banner .ib-close{background:transparent;color:var(--sec);font-size:16px;padding:2px 6px}
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ════════════════════════════════════ -->
+<header class="hdr">
+  <a href="index.html" class="hdr-logo" title="Accueil" style="text-decoration:none;cursor:pointer;">☀️</a>
+  <div class="hdr-title">
+    <h1>SimulSolaire Guinée</h1>
+    <p id="step-label">Étape 1 — Configuration</p>
+  </div>
+  <div class="step-dots">
+    <div class="dot cur" id="d0"></div>
+    <div class="dot" id="d1"></div>
+    <div class="dot" id="d2"></div>
+  </div>
+</header>
+
+<!-- ═══ INSTALL BANNER ════════════════════════════ -->
+<div id="inst-banner">
+  📲 Installer l'app sur votre téran
+  <button onclick="installApp()">Installer</button>
+  <button class="ib-close" onclick="document.getElementById('inst-banner').style.display='none'">✕</button>
+</div>
+
+<!-- ═══ VIEWS ══════════════════════════════════════ -->
+<div class="view-wrap">
+
+  <!-- VIEW 1 : CONFIG -->
+  <div class="view act" id="v0">
+    <div class="sec-head">📍 Votre région</div>
+    <div class="region-grid" id="regionGrid"></div>
+
+    <div class="sec-head">🌤️ Saison</div>
+    <div class="tpair">
+      <button class="tbtn act" id="btnDry"   onclick="setSeason('dry')">☀️ Saison sèche</button>
+      <button class="tbtn"     id="btnRainy" onclick="setSeason('rainy')">🌧️ Saison des pluies</button>
+    </div>
+
+    <div class="sec-head">🔋 Autonomie (jours sans soleil)</div>
+    <div class="pills">
+      <button class="pill" id="a1" onclick="setAutonomy(1)">1 jour</button>
+      <button class="pill act" id="a2" onclick="setAutonomy(2)">2 jours</button>
+      <button class="pill" id="a3" onclick="setAutonomy(3)">3 jours</button>
+    </div>
+
+    <div class="sec-head">⚡ Type de système</div>
+    <div class="tpair">
+      <button class="tbtn act" id="sAC" onclick="setSys('ac')">🔌 220V avec onduleur</button>
+      <button class="tbtn"     id="sDC" onclick="setSys('dc')">🔋 12V sans onduleur</button>
+    </div>
+
+    <div class="sec-head">🔌 Tension batterie</div>
+    <div class="tpair">
+      <button class="tbtn act" id="v12" onclick="setVolt(12)">12V</button>
+      <button class="tbtn"     id="v24" onclick="setVolt(24)">24V</button>
+    </div>
+
+    <div class="info-box" id="regionInfo">
+      <h3>Zone non sélectionnée</h3>
+      <p>Choisissez votre région pour voir les données d'ensoleillement.</p>
+    </div>
+
+    <a href="carte.html" style="
+        display:flex;align-items:center;justify-content:center;gap:8px;
+        width:100%;padding:13px;margin-bottom:10px;
+        background:rgba(26,58,92,0.08);color:var(--sec);
+        border:2px solid var(--sec);border-radius:var(--rad);
+        font-size:.9rem;font-weight:700;text-decoration:none;
+        transition:background .2s;
+      ">🗺️ Voir la carte solaire de Guinée</a>
+    <button class="next-btn" onclick="goView(1)">Choisir mes appareils →</button>
+  </div>
+
+  <!-- VIEW 2 : APPAREILS -->
+  <div class="view" id="v1">
+    <div class="cat-wrap">
+      <div class="cat-scroll" id="catScroll"></div>
+    </div>
+    <div class="app-grid" id="appGrid"></div>
+  </div>
+
+  <!-- VIEW 3 : RÉSULTATS -->
+  <div class="view" id="v2">
+    <div id="resultsContent"></div>
+  </div>
+
+</div><!-- /view-wrap -->
+
+<!-- Floating total bar (view 2) -->
+<div class="float-bar hidden" id="floatBar">
+  <div class="fb-inner">
+    <div class="fb-txt">
+      <div class="fb-count" id="fbCount">0 appareil</div>
+      <div class="fb-val"   id="fbVal">0 Wh/jour</div>
+    </div>
+    <button class="fb-btn" onclick="goView(2)">Voir mon kit →</button>
+  </div>
+</div>
+
+<!-- ═══ BOTTOM NAV ═════════════════════════════════ -->
+<nav class="nav">
+  <button class="ni act" id="ni0" onclick="goView(0)">
+    <span class="ni-ic">⚙️</span>
+    <span class="ni-lb">Config</span>
+  </button>
+  <button class="ni" id="ni1" onclick="goView(1)">
+    <span class="ni-ic">💡</span>
+    <span class="ni-lb">Appareils</span>
+    <span class="ni-badge" id="appBadge" style="display:none">0</span>
+  </button>
+  <button class="ni" id="ni2" onclick="goView(2)">
+    <span class="ni-ic">📊</span>
+    <span class="ni-lb">Mon kit</span>
+  </button>
+</nav>
+
+<!-- ═══ BOTTOM SHEET — DEVIS ═══════════════════════ -->
+<div class="sheet-ov" id="sheetOv" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <h2>📋 Recevoir votre devis</h2>
+    <p>Renseignez les coordonnées du client pour envoyer le devis PDF.</p>
+
+    <div class="sh-sum" id="shSum"></div>
+
+    <div class="fg">
+      <label>Nom complet *</label>
+      <input type="text" id="fName" placeholder="Ex: Mamadou Diallo"/>
+    </div>
+    <div class="fg">
+      <label>Téléphone / WhatsApp *</label>
+      <input type="tel" id="fPhone" placeholder="+224 6XX XX XX XX" oninput="prevPhone(this.value)"/>
+      <div class="ph-prev" id="phPrev"></div>
+    </div>
+    <div class="fg">
+      <label>Ville / Préfecture *</label>
+      <input type="text" id="fCity" placeholder="Ex: Conakry, Kankan…"/>
+    </div>
+    <div class="fg">
+      <label>Email (optionnel)</label>
+      <input type="email" id="fEmail" placeholder="exemple@email.com"/>
+    </div>
+    <div class="fg">
+      <label>Message (optionnel)</label>
+      <textarea id="fNote" placeholder="Questions, précisions…"></textarea>
+    </div>
+
+    <div class="sh-acts">
+      <button class="ctam wa" id="btnWA" onclick="sendWA()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Envoyer par WhatsApp
+      </button>
+      <button class="ctam em" id="btnEM" onclick="sendEmail()">✉️ Envoyer par Email</button>
+      <button class="ctam sk" onclick="closeSheetDirect()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   SERVICE WORKER
+══════════════════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(() => {})
+  );
+}
+
+/* ══════════════════════════════════════════════════
+   PWA INSTALL
+══════════════════════════════════════════════════ */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('inst-banner').style.display = 'flex';
+});
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('inst-banner').style.display = 'none';
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   CONFIG BUSINESS
+══════════════════════════════════════════════════ */
+const BUSINESS = {
+  name: 'SimulSolaire Guinée',
+  whatsapp: '224620000000',
+  email: 'contact@simulsolaire.gn',
+  website: 'www.simulsolaire.gn',
+};
+
+/* ══════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════ */
+const REGIONS = {
+  conakry:    { label:'Conakry & Basse Guinée',             dry:5.0, rainy:3.8, icon:'🌊', sub:'Coyah, Dubréka, Forécariah' },
+  moyenne:    { label:'Moyenne Guinée',                     dry:5.8, rainy:4.2, icon:'⛰️', sub:'Labé, Mamou, Dalaba, Pita' },
+  haute:      { label:'Haute Guinée',                       dry:6.5, rainy:4.5, icon:'🌾', sub:'Kankan, Siguiri, Kouroussa' },
+  forestiere: { label:'Guinée Forestière',                  dry:5.2, rainy:3.5, icon:'🌿', sub:'N\'Zérékoré, Macenta, Guéckédou' },
+};
+
+const CATEGORIES = [
+  { id:'eclairage',      label:'Éclairage',    icon:'💡', items:[
+    ['led3','Ampoule LED 3W','💡',3,6],['led7','Ampoule LED 7W','💡',7,6],
+    ['led12','Ampoule LED 12W','💡',12,5],['tube18','Tube LED 18W','🔦',18,5],
+    ['bureau','Lampe bureau 8W','🔆',8,4],['halo40','Halogène 40W','🔆',40,4],
+  ]},
+  { id:'ventilation',    label:'Ventilation',  icon:'🌀', items:[
+    ['vent12v','Ventilateur 12V DC','🌀',20,10],['ventTab','Ventilateur table','🌀',35,8],
+    ['ventPied','Ventilateur pied','🌀',50,8],['ventPlaf','Ventilateur plafond','🌀',65,10],
+    ['clim1hp','Climatiseur 1CV','❄️',900,6],['clim15hp','Climatiseur 1.5CV','❄️',1400,5],
+  ]},
+  { id:'sonimage',       label:'Son & Image',  icon:'📺', items:[
+    ['tv19','TV LED 19"','📺',25,5],['tv24','TV LED 24"','📺',35,5],
+    ['tv32','TV LED 32"','📺',55,5],['tv43','TV LED 43"','📺',80,4],
+    ['deco','Décodeur TNT','📡',10,6],['hifi','Chaîne hi-fi','🎵',45,3],
+    ['radio','Radio FM','📻',5,4],['proj','Projecteur','🎬',200,3],
+  ]},
+  { id:'teleinfo',       label:'Téléphonie',   icon:'📱', items:[
+    ['phone','Chargeur smartphone','📱',10,3],['tablet','Chargeur tablette','📟',18,3],
+    ['laptop','Ordinateur portable','💻',45,6],['pc','PC de bureau','🖥️',200,6],
+    ['wifi','Routeur WiFi','📶',12,18],['print','Imprimante','🖨️',60,1],
+  ]},
+  { id:'electromenager', label:'Électroménager',icon:'🏠', items:[
+    ['frigo130','Réfrigérateur 130L','🧊',60,24,'moy'],['frigo200','Réfrigérateur 200L','🧊',80,24,'moy'],
+    ['congelat','Congélateur 150L','🧊',70,24,'moy'],['mixeur','Mixeur / Blender','🍹',400,0.3],
+    ['fer','Fer à repasser','👔',1000,0.5],['machine','Machine à laver','🧺',500,0.5],
+  ]},
+  { id:'pompage',        label:'Pompage',      icon:'💧', items:[
+    ['pompe037','Pompe 0.37kW','💧',370,4],['pompe075','Pompe 0.75kW','💧',750,4],
+    ['psurf','Pompe surface','💧',500,3],
+  ]},
+  { id:'outillage',      label:'Outillage',    icon:'🔧', items:[
+    ['perceuse','Perceuse électrique','🔩',500,1],['meuleuse','Meuleuse 115mm','⚙️',850,0.5],
+    ['scie','Scie circulaire','🪚',1400,0.5],['soudure','Poste à souder','🔥',2500,0.5],
+  ]},
+];
+
+const PRICES = {
+  panel100:180000,panel150:240000,panel200:320000,panel300:450000,panel400:580000,
+  bat100_12:550000,bat150_12:780000,bat200_12:1050000,
+  bat100_24:950000,bat150_24:1300000,bat200_24:1750000,
+  ctrl20:130000,ctrl30:180000,ctrl40:250000,ctrl60:380000,ctrl80:520000,
+  inv600:220000,inv1000:350000,inv1500:500000,inv2000:650000,inv3000:950000,inv5000:1600000,
+};
+
+const USD_RATE = 8600;
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let cfg = { region:'conakry', season:'dry', autonomy:2, sysType:'ac', voltage:12 };
+let selected  = {};
+let activeCat = 'eclairage';
+let curView   = 0;
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+(function init() {
+  // Pré-sélection depuis la carte (?region=haute)
+  const urlRegion = new URLSearchParams(window.location.search).get('region');
+  if (urlRegion && REGIONS[urlRegion]) {
+    cfg.region = urlRegion;
+    // Bandeau de confirmation
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#27AE60;color:#fff;text-align:center;padding:10px;font-size:.82rem;font-weight:700;';
+    b.textContent = '✅ Région pré-sélectionnée depuis la carte solaire';
+    document.body.prepend(b);
+    setTimeout(() => b.remove(), 3500);
+  }
+  renderRegionGrid();
+  renderCatChips();
+  renderAppGrid();
+  updateRegionInfo();
+})();
+
+/* ══════════════════════════════════════════════════
+   VIEW NAVIGATION
+══════════════════════════════════════════════════ */
+const LABELS = ['Étape 1 — Configuration','Étape 2 — Appareils','Étape 3 — Mon kit'];
+
+function goView(idx) {
+  if (idx === 2) renderResults();
+  const views = document.querySelectorAll('.view');
+  views.forEach((v, i) => {
+    v.classList.remove('act','prv');
+    if (i === idx)       v.classList.add('act');
+    else if (i < idx)    v.classList.add('prv');
+  });
+  document.querySelectorAll('.ni').forEach((n,i) => n.classList.toggle('act', i===idx));
+  document.getElementById('step-label').textContent = LABELS[idx];
+  ['d0','d1','d2'].forEach((id,i) => {
+    const d = document.getElementById(id);
+    d.className = 'dot' + (i===idx?' cur':i<idx?' done':'');
+  });
+  curView = idx;
+  updateFloatBar();
+}
+
+/* ══════════════════════════════════════════════════
+   VIEW 1 — CONFIG
+══════════════════════════════════════════════════ */
+function renderRegionGrid() {
+  const el = document.getElementById('regionGrid');
+  el.innerHTML = Object.entries(REGIONS).map(([key, r]) => `
+    <div class="rc ${cfg.region===key?'act':''}" onclick="setRegion('${key}')">
+      <span class="ri">${r.icon}</span>
+      <div class="rn">${r.label.split(' ')[0]+' '+r.label.split(' ')[1]}</div>
+      <div class="rs">${r.sub.split(',')[0].trim()}</div>
+    </div>`).join('');
+}
+
+function setRegion(key) {
+  cfg.region = key; renderRegionGrid(); updateRegionInfo();
+}
+
+function setSeason(s) {
+  cfg.season = s;
+  document.getElementById('btnDry').classList.toggle('act', s==='dry');
+  document.getElementById('btnRainy').classList.toggle('act', s==='rainy');
+  updateRegionInfo();
+}
+
+function setAutonomy(n) {
+  cfg.autonomy = n;
+  [1,2,3].forEach(i => document.getElementById('a'+i).classList.toggle('act', i===n));
+}
+
+function setSys(t) {
+  cfg.sysType = t;
+  document.getElementById('sAC').classList.toggle('act', t==='ac');
+  document.getElementById('sDC').classList.toggle('act', t==='dc');
+}
+
+function setVolt(v) {
+  cfg.voltage = v;
+  document.getElementById('v12').classList.toggle('act', v===12);
+  document.getElementById('v24').classList.toggle('act', v===24);
+}
+
+function updateRegionInfo() {
+  const r = REGIONS[cfg.region];
+  const psh = r[cfg.season];
+  document.getElementById('regionInfo').innerHTML = `
+    <h3>${r.icon} ${r.label}</h3>
+    <p>
+      <strong>${psh}h</strong> de soleil/jour (${cfg.season==='dry'?'saison sèche':'saison des pluies'})<br>
+      Préfectures : ${r.sub}
+    </p>`;
+}
+
+/* ══════════════════════════════════════════════════
+   VIEW 2 — APPAREILS
+══════════════════════════════════════════════════ */
+function renderCatChips() {
+  document.getElementById('catScroll').innerHTML = CATEGORIES.map(c => `
+    <button class="cc ${c.id===activeCat?'act':''}" onclick="switchCat('${c.id}')">
+      <span class="ci">${c.icon}</span>
+      <span class="cn">${c.label}</span>
+    </button>`).join('');
+}
+
+function switchCat(id) {
+  activeCat = id; renderCatChips(); renderAppGrid();
+}
+
+function findItem(id) {
+  for (const c of CATEGORIES) for (const it of c.items) if (it[0]===id) return it;
+  return null;
+}
+
+function renderAppGrid() {
+  const cat = CATEGORIES.find(c => c.id === activeCat);
+  document.getElementById('appGrid').innerHTML = cat.items.map(([id,name,icon,power]) => {
+    const s = selected[id]; const qty = s ? s.qty : 0;
+    return `<div class="ac ${s?'add':''}" onclick="addApp('${id}')">
+      ${qty ? `<span class="abadge">${qty}</span>` : ''}
+      <span class="ai">${icon}</span>
+      <span class="an">${name}</span>
+      <span class="ap">${power} W</span>
+    </div>`;
+  }).join('');
+}
+
+function addApp(id) {
+  const item = findItem(id); if (!item) return;
+  const [, name, icon, power, defH] = item;
+  if (selected[id]) selected[id].qty++;
+  else selected[id] = { id, name, icon, power, qty:1, hours:defH };
+  renderAppGrid(); updateFloatBar(); updateBadge();
+}
+
+function updateBadge() {
+  const n = Object.keys(selected).length;
+  const b = document.getElementById('appBadge');
+  b.textContent = n; b.style.display = n ? 'flex' : 'none';
+}
+
+function updateFloatBar() {
+  const n   = Object.keys(selected).length;
+  const wh  = calcTotal();
+  const bar = document.getElementById('floatBar');
+  bar.classList.toggle('hidden', n === 0 || curView !== 1);
+  document.getElementById('fbCount').textContent = n + ' appareil' + (n>1?'s':'');
+  document.getElementById('fbVal').textContent   = fmtWh(wh);
+}
+
+/* ══════════════════════════════════════════════════
+   VIEW 3 — RÉSULTATS
+══════════════════════════════════════════════════ */
+function renderResults() {
+  const el = document.getElementById('resultsContent');
+  const n  = Object.keys(selected).length;
+
+  if (!n) {
+    el.innerHTML = `<div class="empty-r">
+      <span class="ei">☀️</span>
+      <p>Vous n'avez pas encore sélectionné d'appareils.</p>
+      <button onclick="goView(1)">← Choisir mes appareils</button>
+    </div>`;
+    return;
+  }
+
+  const totalWh  = calcTotal();
+  const comp     = calcComp(totalWh);
+  const region   = REGIONS[cfg.region];
+  const coverage = Math.round((comp.dailyProd / totalWh) * 100);
+  const covColor = coverage>=100?'var(--grn)':coverage>=80?'var(--acc)':'var(--red)';
+  const bnrCls   = coverage>=100?'ok':coverage>=80?'warn':'err';
+  const bnrMsg   = coverage>=110?'✅ Le kit couvre largement votre besoin.'
+                 : coverage>=100?'✅ Le kit couvre exactement votre consommation.'
+                 : coverage>=80 ?'⚠️ Couverture partielle – pensez à limiter certains usages.'
+                 :               '❌ Kit insuffisant – augmentez l\'autonomie ou réduisez les appareils.';
+
+  const maxBar = Math.max(totalWh, comp.dailyProd, 1);
+  const prodPct  = Math.min(comp.dailyProd/maxBar*100,100);
+  const consoPct = Math.min(totalWh/maxBar*100,100);
+  const consoClass = totalWh > comp.dailyProd ? 'over' : 'conso';
+
+  const comps = [
+    `${comp.panelQty} × Panneau solaire ${comp.panelW}W monocristallin`,
+    `${comp.batQty} × Batterie ${comp.sysType==='ac'?'GEL':'AGM'} ${comp.batAh}Ah ${comp.voltage}V`,
+    `1 × Régulateur MPPT ${comp.ctrlA}A`,
+    ...(comp.sysType==='ac'?[`1 × Onduleur pur sinus ${comp.invW}W`]:[]),
+    `Câbles, connecteurs &amp; fixations inclus`,
+  ].map(c=>`<li><span class="ck">✓</span>${c}</li>`).join('');
+
+  const appLines = Object.values(selected).map(a=>
+    `<div class="si">
+      <span class="si-icon">${a.icon}</span>
+      <div class="si-name">${a.name}<div class="si-qty">${a.qty}× — ${a.hours}h/j</div></div>
+      <span class="si-val">${Math.round(a.power*a.qty*a.hours)} Wh</span>
+    </div>`).join('');
+
+  const costItems = [
+    [`Panneaux solaires (${comp.panelQty}×${comp.panelW}W)`, comp.pricePanel],
+    [`Batteries (${comp.batQty}×${comp.batAh}Ah)`, comp.priceBat],
+    [`Régulateur MPPT ${comp.ctrlA}A`, comp.priceCtrl],
+    ...(comp.sysType==='ac'?[[`Onduleur ${comp.invW}W`,comp.priceInv]]:[]),
+    [`Câbles & accessoires (15%)`, comp.priceAccess],
+  ].map(([l,v])=>`<div class="cl"><span>${l}</span><strong>${fmtGNF(v)}</strong></div>`).join('');
+
+  el.innerHTML = `
+    <!-- Barres énergie -->
+    <div class="meter">
+      <div class="mrow">
+        <span class="mlbl">☀️ Production kit</span>
+        <div class="mtrk"><div class="mfill prod" style="width:${prodPct}%"></div></div>
+        <span class="mval">${fmtWh(comp.dailyProd)}</span>
+      </div>
+      <div class="mrow">
+        <span class="mlbl">⚡ Consommation</span>
+        <div class="mtrk"><div class="mfill ${consoClass}" style="width:${consoPct}%"></div></div>
+        <span class="mval">${fmtWh(totalWh)}</span>
+      </div>
+    </div>
+
+    <!-- Kit card -->
+    <div class="kit-card-m">
+      <span class="kcm-badge">Kit recommandé</span>
+      <div class="kcm-name">${kitLabel(comp)}</div>
+      <div class="kcm-sub">Système ${comp.sysType==='ac'?'220V avec onduleur':'12V DC'} — ${cfg.autonomy} j d'autonomie</div>
+      <ul class="kcm-comps">${comps}</ul>
+      <div class="kcm-price">
+        <div class="kcm-gnf">${fmtGNF(comp.totalPrice)}</div>
+        <div class="kcm-usd">≈ ${fmtUSD(comp.totalPrice)} USD</div>
+        <div class="kcm-note">Prix indicatif — pose non incluse</div>
+      </div>
+    </div>
+
+    <!-- Couverture -->
+    <div class="cov-card">
+      <div class="covh">
+        <span class="cl">Couverture solaire</span>
+        <span class="cp-pct" style="color:${covColor}">${coverage}%</span>
+      </div>
+      <div class="cov-trk">
+        <div class="cov-fill" style="width:${Math.min(coverage,100)}%;background:${covColor}"></div>
+      </div>
+    </div>
+
+    <div class="bnr ${bnrCls}">${bnrMsg}</div>
+
+    <!-- Stats -->
+    <div class="stats2">
+      <div class="stat-m"><div class="sv">${fmtWh(totalWh)}</div><div class="sl">Conso/jour</div></div>
+      <div class="stat-m"><div class="sv">${fmtWh(comp.dailyProd)}</div><div class="sl">Production/jour</div></div>
+      <div class="stat-m"><div class="sv">${comp.panelW*comp.panelQty}W</div><div class="sl">Puissance panneaux</div></div>
+      <div class="stat-m"><div class="sv">${region[cfg.season]}h</div><div class="sl">Soleil/jour</div></div>
+    </div>
+
+    <!-- Appareils sélectionnés -->
+    <div class="accord" id="accApps">
+      <div class="accord-hd" onclick="toggleAccord()">
+        <span>📋 Appareils sélectionnés (${n})</span>
+        <span class="accord-arr" id="accArr">▼</span>
+      </div>
+      <div class="accord-bd" id="accBd">
+        <div class="accord-inner">${appLines}</div>
+      </div>
+    </div>
+
+    <!-- Détail coût -->
+    <div class="cost-card">
+      <h4>Détail du devis estimatif</h4>
+      ${costItems}
+      <div class="cl tot"><span>Total estimé</span><strong>${fmtGNF(comp.totalPrice)}</strong></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="res-ctas">
+      <button class="ctam wa" onclick="openSheet()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Envoyer le devis par WhatsApp
+      </button>
+      <button class="ctam pr" onclick="openSheet()">📩 Envoyer par Email</button>
+      <button class="ctam sk" onclick="goView(1)">← Modifier mes appareils</button>
+    </div>`;
+
+  // Maj résumé du sheet
+  updateSheetSummary(totalWh, comp);
+}
+
+function toggleAccord() {
+  const bd  = document.getElementById('accBd');
+  const arr = document.getElementById('accArr');
+  const open = bd.classList.toggle('open');
+  arr.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+/* ══════════════════════════════════════════════════
+   CALCULS
+══════════════════════════════════════════════════ */
+function calcTotal() {
+  return Object.values(selected).reduce((s,a)=>s+a.power*a.qty*a.hours, 0);
+}
+
+function calcPeak() {
+  return Object.values(selected).reduce((s,a)=>s+a.power*a.qty, 0);
+}
+
+function calcComp(totalWh) {
+  const { region, season, autonomy, sysType, voltage } = cfg;
+  const psh     = REGIONS[region][season];
+  const EFF     = sysType==='ac' ? 0.70 : 0.78;
+  const DOD     = 0.50, BEFF = 0.85;
+
+  const reqPW   = totalWh / (psh * EFF);
+  const reqBAh  = (totalWh * autonomy) / (voltage * DOD * BEFF);
+  const peakW   = calcPeak();
+
+  // Panels
+  let panelW=0, panelQty=0;
+  for (const pw of [400,300,200,150,100]) {
+    for (let n=1;n<=20;n++) { if(pw*n>=reqPW){panelW=pw;panelQty=n;break} }
+    if(panelQty) break;
+  }
+  if (!panelQty) { panelW=400; panelQty=Math.ceil(reqPW/400); }
+
+  // Batteries
+  let batAh=100, batQty=1;
+  for (const ba of [200,150,100]) {
+    for (let n=1;n<=20;n++) { if(ba*n>=reqBAh){batAh=ba;batQty=n;break} }
+    if(batAh*batQty>=reqBAh) break;
+  }
+  if(batAh*batQty<reqBAh){batAh=200;batQty=Math.ceil(reqBAh/200);}
+
+  // Ctrl
+  const ctrlRaw = panelW*panelQty/voltage*1.25;
+  let ctrlA=80;
+  for (const ca of [20,30,40,60,80]) { if(ca>=ctrlRaw){ctrlA=ca;break} }
+
+  // Inv
+  let invW=0;
+  if (sysType==='ac') {
+    const invRaw=peakW*1.5;
+    for (const iv of [600,1000,1500,2000,3000,5000]) { if(iv>=invRaw){invW=iv;break} }
+    if(!invW) invW=5000;
+  }
+
+  const pricePanel = (PRICES['panel'+panelW]||0)*panelQty;
+  const priceBat   = (PRICES['bat'+batAh+'_'+voltage]||0)*batQty;
+  const priceCtrl  = PRICES['ctrl'+ctrlA]||0;
+  const priceInv   = sysType==='ac'?(PRICES['inv'+invW]||0):0;
+  const priceAccess= Math.round((pricePanel+priceBat+priceCtrl+priceInv)*0.15);
+  const totalPrice = pricePanel+priceBat+priceCtrl+priceInv+priceAccess;
+  const dailyProd  = Math.round(panelW*panelQty*psh*EFF);
+
+  return { panelW,panelQty,batAh,batQty,ctrlA,invW,sysType,voltage,
+           pricePanel,priceBat,priceCtrl,priceInv,priceAccess,totalPrice,dailyProd };
+}
+
+/* ══════════════════════════════════════════════════
+   SHEET — DEVIS
+══════════════════════════════════════════════════ */
+function openSheet() {
+  document.getElementById('sheetOv').classList.add('show');
+}
+function closeSheet(e) {
+  if (e.target===document.getElementById('sheetOv')) closeSheetDirect();
+}
+function closeSheetDirect() {
+  document.getElementById('sheetOv').classList.remove('show');
+}
+
+function updateSheetSummary(totalWh, comp) {
+  document.getElementById('shSum').innerHTML =
+    `<strong>Résumé :</strong> ${kitLabel(comp)} — ${fmtWh(totalWh)} — <strong>${fmtGNF(comp.totalPrice)}</strong>`;
+}
+
+function prevPhone(val) {
+  const p = document.getElementById('phPrev');
+  if (!val.trim()) { p.textContent=''; return; }
+  p.textContent = '📱 +' + fmtWANum(val);
+}
+
+function fmtWANum(raw) {
+  let n=raw.replace(/\D/g,'');
+  if(n.startsWith('00')) n=n.slice(2);
+  if(n.startsWith('0'))  n='224'+n.slice(1);
+  if(n.length<=9)        n='224'+n;
+  return n;
+}
+
+function getFields() {
+  return {
+    name:  document.getElementById('fName').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    city:  document.getElementById('fCity').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    note:  document.getElementById('fNote').value.trim(),
+  };
+}
+
+function validate(needPhone, needEmail) {
+  const { name, phone, city, email } = getFields();
+  if (!name||!city) { toast('⚠️ Veuillez renseigner le nom et la ville.'); return false; }
+  if (needPhone && !phone) { toast('⚠️ Veuillez entrer un numéro WhatsApp.'); return false; }
+  if (needEmail && !email) { toast('⚠️ Veuillez entrer une adresse email.'); return false; }
+  return true;
+}
+
+/* ══════════════════════════════════════════════════
+   PDF GENERATION
+══════════════════════════════════════════════════ */
+function buildPDF(name, city, phone) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const totalWh = calcTotal();
+  const comp    = calcComp(totalWh);
+  const region  = REGIONS[cfg.region];
+  const cov     = Math.round((comp.dailyProd/totalWh)*100);
+  const date    = new Date().toLocaleDateString('fr-FR');
+  const devNum  = 'DEV-'+Date.now().toString().slice(-6);
+  const autoD   = cfg.autonomy;
+  const saison  = cfg.season==='dry'?'Saison seche':'Saison des pluies';
+  const W=210,M=14,CW=W-2*M; let y=0;
+  const F=(st,sz)=>{doc.setFont('helvetica',st);doc.setFontSize(sz)};
+  const TC=(...c)=>doc.setTextColor(...c);
+  const FC=(...c)=>doc.setFillColor(...c);
+  const pGNF=v=>new Intl.NumberFormat('fr-FR').format(Math.round(v))+' GNF';
+
+  FC(26,58,92);doc.rect(0,0,W,36,'F');
+  FC(206,17,38);doc.rect(W-18,0,6,36,'F');
+  FC(252,209,22);doc.rect(W-12,0,6,36,'F');
+  FC(0,148,96);doc.rect(W-6,0,6,36,'F');
+  FC(252,209,22);doc.circle(M+8,18,7,'F');
+  F('bold',16);TC(255,255,255);doc.text(BUSINESS.name,M+20,14);
+  F('bold',9);TC(252,209,22);doc.text('DEVIS KIT PHOTOVOLTAIQUE SUR MESURE',M+20,21);
+  F('normal',7.5);TC(180,200,220);
+  doc.text('No. '+devNum+'   |   Date : '+date+'   |   Validite : 30 jours',M+20,28);
+  y=44;
+
+  FC(240,244,248);doc.roundedRect(M,y,CW,22,2,2,'F');
+  doc.setDrawColor(209,217,224);doc.setLineWidth(0.3);
+  doc.line(M+CW*0.5,y+3,M+CW*0.5,y+19);
+  F('bold',7);TC(107,114,128);doc.text('CLIENT',M+4,y+6);doc.text('LOCALISATION',M+CW*0.52,y+6);
+  F('bold',10);TC(44,62,80);doc.text(name,M+4,y+13);doc.text(city,M+CW*0.52,y+13);
+  F('normal',8.5);TC(107,114,128);
+  if(phone) doc.text('Tel : '+phone,M+4,y+19.5);
+  doc.text(region.label,M+CW*0.52,y+19.5);
+  y+=28;
+
+  F('bold',10);TC(232,117,26);doc.text('APPAREILS SELECTIONNES',M,y);
+  F('normal',7.5);TC(107,114,128);
+  doc.text(region.label+'  |  '+saison+'  |  '+region[cfg.season]+'h/j',M,y+5);
+  y+=9;
+  FC(26,58,92);doc.rect(M,y,CW,7,'F');
+  F('bold',7.5);TC(255,255,255);
+  doc.text('Appareil',M+3,y+4.8);doc.text('Qte',M+CW*0.60,y+4.8);
+  doc.text('Puissance',M+CW*0.67,y+4.8);doc.text('Duree/j',M+CW*0.82,y+4.8);
+  doc.text('Wh/jour',M+CW-2,y+4.8,{align:'right'});
+  y+=7;
+  let ri=0;
+  Object.values(selected).forEach(a=>{
+    const d=Math.round(a.power*a.qty*a.hours);
+    if(ri%2===0){FC(248,250,252);doc.rect(M,y,CW,6,'F');}
+    F('normal',8);TC(44,62,80);
+    doc.text(a.name,M+3,y+4);doc.text(String(a.qty),M+CW*0.62,y+4);
+    doc.text(a.power+'W',M+CW*0.68,y+4);doc.text(a.hours+'h',M+CW*0.83,y+4);
+    F('bold',8);TC(232,117,26);doc.text(d+' Wh',M+CW-2,y+4,{align:'right'});
+    y+=6;ri++;
+  });
+  FC(44,62,80);doc.rect(M,y,CW,7.5,'F');
+  F('bold',9);TC(255,255,255);doc.text('CONSOMMATION TOTALE',M+3,y+5);
+  TC(252,209,22);doc.text(Math.round(totalWh)+' Wh/jour',M+CW-2,y+5,{align:'right'});
+  y+=13;
+
+  F('bold',10);TC(232,117,26);doc.text('KIT SOLAIRE RECOMMANDE',M,y);y+=5;
+  FC(232,117,26);doc.roundedRect(M,y,80,8,2,2,'F');
+  F('bold',9);TC(255,255,255);doc.text(kitLabel(comp),M+40,y+5.5,{align:'center'});
+  F('normal',7.5);TC(107,114,128);
+  doc.text('Systeme '+(comp.sysType==='ac'?'220V avec onduleur':'12V DC')+'  —  '+autoD+' j d\'autonomie',M+83,y+5.5);
+  y+=13;
+  FC(26,58,92);doc.rect(M,y,CW,7,'F');
+  F('bold',7.5);TC(255,255,255);
+  doc.text('Composant',M+3,y+4.8);doc.text('Prix unit.',M+CW*0.60,y+4.8);
+  doc.text('Qte',M+CW*0.79,y+4.8);doc.text('Total GNF',M+CW-2,y+4.8,{align:'right'});
+  y+=7;
+  const cItems=[
+    ['Panneau solaire '+comp.panelW+'W monocristallin',PRICES['panel'+comp.panelW]||0,comp.panelQty,comp.pricePanel],
+    ['Batterie '+(comp.sysType==='ac'?'GEL':'AGM')+' '+comp.batAh+'Ah '+comp.voltage+'V',PRICES['bat'+comp.batAh+'_'+comp.voltage]||0,comp.batQty,comp.priceBat],
+    ['Regulateur MPPT '+comp.ctrlA+'A',PRICES['ctrl'+comp.ctrlA]||0,1,comp.priceCtrl],
+    ...(comp.sysType==='ac'?[['Onduleur pur sinus '+comp.invW+'W',PRICES['inv'+comp.invW]||0,1,comp.priceInv]]:[]),
+    ['Cables, connecteurs et fixations (15%)','','',comp.priceAccess],
+  ];
+  cItems.forEach(([label,unit,qty,total],i)=>{
+    if(i%2===0){FC(248,250,252);doc.rect(M,y,CW,6,'F');}
+    F('normal',8);TC(44,62,80);doc.text(label,M+3,y+4);
+    if(unit) doc.text(pGNF(unit),M+CW*0.61,y+4);
+    if(qty) doc.text(String(qty),M+CW*0.80,y+4);
+    F('bold',8);TC(26,58,92);doc.text(pGNF(total),M+CW-2,y+4,{align:'right'});
+    y+=6;
+  });
+  FC(232,117,26);doc.rect(M,y,CW,9,'F');
+  F('bold',10);TC(255,255,255);doc.text('TOTAL ESTIME',M+3,y+6);
+  doc.text(pGNF(comp.totalPrice),M+CW-2,y+6,{align:'right'});
+  y+=12;
+  F('normal',7.5);TC(107,114,128);
+  doc.text('Equiv. USD : ~'+fmtUSD(comp.totalPrice)+' USD   |   Production : '+comp.dailyProd+' Wh/j   |   Couverture : '+cov+'%',M,y);
+  y+=8;
+  FC(255,243,205);doc.roundedRect(M,y,CW,11,2,2,'F');
+  doc.setDrawColor(252,209,22);doc.setLineWidth(0.4);
+  doc.roundedRect(M,y,CW,11,2,2,'S');
+  F('bold',7.5);TC(125,90,0);doc.text('NOTE',M+4,y+5);
+  F('normal',7);TC(100,70,0);
+  doc.text('Prix indicatif, pose et transport non inclus. Stock sous reserve. Valable 30 jours.',M+4,y+9);
+  y+=15;
+  FC(26,58,92);doc.rect(0,283,W,14,'F');
+  F('normal',7.5);TC(180,200,220);
+  doc.text(BUSINESS.name+'   |   +'+BUSINESS.whatsapp+'   |   '+BUSINESS.email+'   |   '+BUSINESS.website,W/2,291,{align:'center'});
+  return doc;
+}
+
+async function sharePDF(doc, name, onDownload) {
+  const blob = doc.output('blob');
+  const fname = 'Devis-'+name.replace(/\s+/g,'-')+'.pdf';
+  const file = new File([blob], fname, { type:'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files:[file] })) {
+    await navigator.share({ files:[file], title:'Devis Solaire – '+name });
+    return 'shared';
+  } else {
+    doc.save(fname); onDownload(); return 'downloaded';
+  }
+}
+
+async function sendWA() {
+  if (!validate(true, false)) return;
+  const { name, phone, city, note } = getFields();
+  const btn = document.getElementById('btnWA');
+  btn.classList.add('loading'); btn.textContent = '⏳ Génération PDF…';
+  try {
+    const doc = buildPDF(name, city, phone);
+    const mode = await sharePDF(doc, name, () => {
+      const waNum = fmtWANum(phone);
+      const comp  = calcComp(calcTotal());
+      const msg   = `Bonjour ${name},\n\nVeuillez trouver ci-joint votre devis kit solaire.\n\nKit : ${kitLabel(comp)}\nEstimation : ${new Intl.NumberFormat('fr-FR').format(Math.round(comp.totalPrice))} GNF\n\n${BUSINESS.name}`;
+      window.open('https://wa.me/'+waNum+'?text='+encodeURIComponent(msg),'_blank');
+    });
+    closeSheetDirect();
+    toast(mode==='shared'?'✅ PDF envoyé via WhatsApp !':'✅ PDF téléchargé — WhatsApp ouvert.');
+  } catch(e) {
+    console.error(e); toast('❌ Erreur lors de la génération.');
+  } finally {
+    btn.classList.remove('loading');
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Envoyer par WhatsApp';
+  }
+}
+
+async function sendEmail() {
+  if (!validate(false, true)) return;
+  const { name, phone, city, email } = getFields();
+  const btn = document.getElementById('btnEM');
+  btn.classList.add('loading'); btn.textContent = '⏳ Génération PDF…';
+  try {
+    const doc  = buildPDF(name, city, phone);
+    const comp = calcComp(calcTotal());
+    const mode = await sharePDF(doc, name, () => {
+      const sub  = encodeURIComponent('Devis Solaire – '+kitLabel(comp)+' – '+name);
+      const body = encodeURIComponent(
+        'Bonjour '+name+',\n\nVeuillez trouver ci-joint votre devis kit solaire.\n\n'+
+        'Kit : '+kitLabel(comp)+'\nEstimation : '+
+        new Intl.NumberFormat('fr-FR').format(Math.round(comp.totalPrice))+' GNF\n\n'+
+        'Cordialement,\n'+BUSINESS.name+'\n+'+BUSINESS.whatsapp
+      );
+      window.location.href='mailto:'+email+'?subject='+sub+'&body='+body;
+    });
+    closeSheetDirect();
+    toast(mode==='shared'?'✅ PDF partagé par email !':'✅ PDF téléchargé — Email ouvert.');
+  } catch(e) {
+    console.error(e); toast('❌ Erreur lors de la génération.');
+  } finally {
+    btn.classList.remove('loading'); btn.textContent='✉️ Envoyer par Email';
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
+function kitLabel(comp) {
+  const w=comp.panelW*comp.panelQty;
+  if(w<=150)  return 'Kit Starter '+w+'W';
+  if(w<=400)  return 'Kit Maison '+w+'W';
+  if(w<=800)  return 'Kit Premium '+w+'W';
+  if(w<=1600) return 'Kit Business '+w+'W';
+  return 'Kit Industrie '+w+'W';
+}
+function fmtWh(v) {
+  if(v<1) return '0 Wh/j';
+  if(v>=1000) return (v/1000).toFixed(1)+' kWh/j';
+  return Math.round(v)+' Wh/j';
+}
+function fmtGNF(v) {
+  return new Intl.NumberFormat('fr-GN').format(Math.round(v))+' GNF';
+}
+function fmtUSD(v) {
+  return new Intl.NumberFormat('en-US').format(Math.round(v/USD_RATE));
+}
+
+let toastT;
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>

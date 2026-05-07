@@ -1,0 +1,15 @@
+# Fichiers PDF et documents
+*.pdf
+
+# Systeme macOS
+.DS_Store
+.AppleDouble
+
+# Editeurs
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs
+*.log

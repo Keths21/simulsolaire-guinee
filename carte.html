@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#1A3A5C"/>
+  <title>Carte Solaire Guinée | SimulSolaire</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --sec: #1A3A5C; --pri: #E8751A; --acc: #FCD116;
+      --wh: #fff; --bg: #F0F4F8; --txt: #1C2B3A; --txt2: #6B7280;
+      --brd: #E5E7EB; --rad: 16px; --rads: 12px;
+      --sh: 0 4px 20px rgba(0,0,0,.14);
+      --sat: env(safe-area-inset-top,0px);
+      --sab: env(safe-area-inset-bottom,0px);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; font-family:-apple-system,'Segoe UI',system-ui,sans-serif; overflow:hidden; }
+
+    /* ── HEADER ── */
+    .hdr {
+      position:fixed; top:0; left:0; right:0; z-index:1000;
+      background:var(--sec); padding:calc(10px + var(--sat)) 16px 10px;
+      display:flex; align-items:center; gap:12px;
+      box-shadow:0 2px 16px rgba(0,0,0,.3);
+    }
+    .back-btn {
+      background:rgba(255,255,255,.12); border:none; color:#fff;
+      border-radius:10px; padding:8px 14px; font-size:.82rem; font-weight:700;
+      cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:5px;
+      transition:background .2s; text-decoration:none;
+    }
+    .back-btn:hover { background:rgba(255,255,255,.2); }
+    .hdr-title { color:#fff; }
+    .hdr-title h1 { font-size:.95rem; font-weight:800; }
+    .hdr-title p  { font-size:.65rem; opacity:.7; }
+    .season-wrap { margin-left:auto; display:flex; gap:6px; }
+    .s-btn {
+      padding:6px 12px; border:1.5px solid rgba(255,255,255,.3);
+      border-radius:8px; background:transparent; color:#fff;
+      font-size:.78rem; font-weight:600; cursor:pointer; font-family:inherit;
+      transition:all .2s;
+    }
+    .s-btn.act { background:var(--acc); color:var(--sec); border-color:var(--acc); }
+
+    /* ── MAP ── */
+    #map {
+      position:fixed; inset:0;
+      top:calc(52px + var(--sat));
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      position:absolute; bottom:calc(20px + var(--sab)); left:16px; z-index:900;
+      background:var(--wh); border-radius:var(--rads); padding:14px 16px;
+      box-shadow:var(--sh); min-width:180px;
+    }
+    .legend h3 { font-size:.72rem; font-weight:800; text-transform:uppercase;
+      letter-spacing:.5px; color:var(--txt2); margin-bottom:10px; }
+    .legend-scale {
+      height:14px; border-radius:7px; margin-bottom:6px;
+      background:linear-gradient(to right, #FFF9C4, #FFD54F, #FFA726, #F57C00, #E64A19, #BF360C);
+    }
+    .legend-labels { display:flex; justify-content:space-between; font-size:.65rem; color:var(--txt2); font-weight:600; }
+    .legend-items { margin-top:10px; display:flex; flex-direction:column; gap:5px; }
+    .li { display:flex; align-items:center; gap:7px; font-size:.76rem; cursor:pointer; padding:3px 5px; border-radius:6px; transition:background .15s; }
+    .li:hover { background:var(--bg); }
+    .li-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .li-name { flex:1; font-weight:600; color:var(--txt); }
+    .li-psh { color:var(--txt2); font-size:.7rem; }
+
+    /* ── INFO PANEL (bottom sheet) ── */
+    .info-panel {
+      position:absolute; bottom:0; left:0; right:0; z-index:950;
+      background:var(--wh); border-radius:24px 24px 0 0;
+      padding:0 0 calc(var(--sab));
+      box-shadow:0 -8px 32px rgba(0,0,0,.18);
+      transform:translateY(100%);
+      transition:transform .4s cubic-bezier(.4,0,.2,1);
+    }
+    .info-panel.show { transform:translateY(0); }
+    .ip-handle { width:36px; height:4px; background:var(--brd); border-radius:2px; margin:12px auto 0; cursor:grab; }
+    .ip-body { padding:16px 20px 20px; }
+    .ip-head { display:flex; align-items:flex-start; gap:14px; margin-bottom:14px; }
+    .ip-icon { font-size:36px; flex-shrink:0; }
+    .ip-titles h2 { font-size:1.1rem; font-weight:800; }
+    .ip-titles p  { font-size:.78rem; color:var(--txt2); }
+    .ip-stats {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;
+    }
+    .ip-stat { background:var(--bg); border-radius:10px; padding:11px; text-align:center; }
+    .ip-stat .sv { font-size:1.2rem; font-weight:800; }
+    .ip-stat .sl { font-size:.65rem; color:var(--txt2); font-weight:600; margin-top:1px; }
+    .ip-prefs { font-size:.78rem; color:var(--txt2); margin-bottom:16px; line-height:1.5; }
+    .ip-prefs strong { color:var(--txt); }
+    .ip-bar { margin-bottom:16px; }
+    .ip-bar-label { display:flex; justify-content:space-between; margin-bottom:5px; font-size:.75rem; font-weight:600; }
+    .ip-bar-track { height:12px; background:var(--bg); border-radius:6px; overflow:hidden; }
+    .ip-bar-fill { height:100%; border-radius:6px; transition:width .6s; }
+    .ip-ctas { display:flex; gap:10px; }
+    .ip-cta {
+      flex:1; padding:13px; border:none; border-radius:var(--rads);
+      font-size:.9rem; font-weight:700; cursor:pointer; font-family:inherit;
+      display:flex; align-items:center; justify-content:center; gap:7px;
+      transition:all .2s;
+    }
+    .ip-cta:active { transform:scale(.97); }
+    .ip-cta.primary { background:var(--pri); color:#fff; }
+    .ip-cta.secondary { background:var(--sec); color:#fff; }
+    .ip-close {
+      position:absolute; top:16px; right:16px;
+      background:var(--bg); border:none; border-radius:50%;
+      width:30px; height:30px; font-size:14px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; color:var(--txt2);
+    }
+
+    /* ── TOOLTIP override ── */
+    .leaflet-tooltip {
+      background:var(--sec) !important; color:#fff !important;
+      border:none !important; border-radius:8px !important;
+      font-family:inherit !important; font-size:.8rem !important;
+      font-weight:700 !important; box-shadow:var(--sh) !important;
+      padding:6px 10px !important;
+    }
+    .leaflet-tooltip::before { display:none !important; }
+
+    /* ── ZOOM control ── */
+    .leaflet-control-zoom { border:none !important; }
+    .leaflet-control-zoom a {
+      background:var(--wh) !important; color:var(--txt) !important;
+      border:none !important; width:32px !important; height:32px !important;
+      line-height:32px !important; font-size:16px !important;
+      border-radius:8px !important; box-shadow:var(--sh) !important;
+      margin-bottom:4px !important; display:block !important;
+    }
+    .leaflet-control-zoom a:hover { background:var(--bg) !important; }
+
+    /* ── PULSING MARKER ── */
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.6} }
+    .pulse-dot { animation:pulse 2s infinite; }
+
+    /* ── LOADING ── */
+    .map-loading {
+      position:absolute; inset:0; z-index:2000;
+      background:var(--sec); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:12px; color:#fff;
+      transition:opacity .5s;
+    }
+    .map-loading.hide { opacity:0; pointer-events:none; }
+    .spinner {
+      width:40px; height:40px; border:3px solid rgba(255,255,255,.2);
+      border-top-color:var(--acc); border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .map-loading p { font-size:.85rem; opacity:.8; }
+
+    /* responsive */
+    @media (max-width:600px) {
+      .legend { bottom:calc(280px + var(--sab)); min-width:150px; padding:10px 12px; }
+      .legend h3 { font-size:.65rem; }
+      .ip-stats { grid-template-columns:1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOADING ══ -->
+<div class="map-loading" id="mapLoading">
+  <div style="font-size:48px">☀️</div>
+  <div class="spinner"></div>
+  <p>Chargement de la carte…</p>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <a class="back-btn" href="javascript:history.back()">← Retour</a>
+  <div class="hdr-title">
+    <h1>Carte Solaire — Guinée</h1>
+    <p>Cliquez sur une zone pour voir son potentiel solaire</p>
+  </div>
+  <div class="season-wrap">
+    <button class="s-btn act" id="sBtnDry"   onclick="setSeason('dry')">☀️ Sèche</button>
+    <button class="s-btn"     id="sBtnRainy" onclick="setSeason('rainy')">🌧️ Pluies</button>
+  </div>
+</header>
+
+<!-- ══ MAP ══ -->
+<div id="map"></div>
+
+<!-- ══ INFO PANEL ══ -->
+<div class="info-panel" id="infoPanel">
+  <div class="ip-handle"></div>
+  <button class="ip-close" onclick="closePanel()">✕</button>
+  <div class="ip-body">
+    <div class="ip-head">
+      <span class="ip-icon" id="ipIcon">☀️</span>
+      <div class="ip-titles">
+        <h2 id="ipName">—</h2>
+        <p id="ipSub">—</p>
+      </div>
+    </div>
+
+    <div class="ip-stats">
+      <div class="ip-stat">
+        <div class="sv" id="ipPsh" style="color:#E8751A">—</div>
+        <div class="sl">Heures soleil/j</div>
+      </div>
+      <div class="ip-stat">
+        <div class="sv" id="ipKwh" style="color:#27AE60">—</div>
+        <div class="sl">kWh/m²/jour</div>
+      </div>
+      <div class="ip-stat">
+        <div class="sv" id="ipRank" style="color:#1A3A5C">—</div>
+        <div class="sl">Classement</div>
+      </div>
+    </div>
+
+    <div class="ip-bar">
+      <div class="ip-bar-label">
+        <span>Potentiel solaire</span>
+        <span id="ipBarPct">—%</span>
+      </div>
+      <div class="ip-bar-track">
+        <div class="ip-bar-fill" id="ipBarFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <p class="ip-prefs"><strong>Préfectures :</strong> <span id="ipPrefs">—</span></p>
+
+    <div class="ip-ctas">
+      <button class="ip-cta primary" id="ipSimBtn" onclick="openSimulator('desktop')">
+        🖥️ Simulateur desktop
+      </button>
+      <button class="ip-cta secondary" id="ipMobBtn" onclick="openSimulator('mobile')">
+        📱 Version mobile
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LEGEND ══ -->
+<div class="legend" id="legend">
+  <h3>Ensoleillement (h/jour)</h3>
+  <div class="legend-scale"></div>
+  <div class="legend-labels">
+    <span>3.5h</span><span>4.5h</span><span>5.5h</span><span>6.5h</span>
+  </div>
+  <div class="legend-items" id="legendItems"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   DATA — ZONES SOLAIRES DE GUINÉE
+════════════════════════════════════════════════ */
+const ZONES = [
+  {
+    id: 'conakry',
+    name: 'Basse Guinée',
+    subtitle: 'Région Maritime & Côtière',
+    icon: '🌊',
+    psh_dry: 5.0, psh_rainy: 3.8,
+    prefectures: 'Conakry, Coyah, Dubréka, Forécariah, Kindia, Boké, Fria, Télimélé, Gaoual, Koundara',
+    desc: 'Climat tropical humide. Proximité de l\'océan Atlantique. Fort taux d\'humidité.',
+    coords: [
+      [-15.08, 11.35], [-14.55, 11.80], [-13.90, 11.65],
+      [-13.50, 11.90], [-13.20, 12.35], [-12.50, 12.05],
+      [-12.00, 11.20], [-11.50, 10.55], [-11.55,  9.85],
+      [-12.00,  9.20], [-12.50,  8.55], [-13.20,  8.40],
+      [-13.80,  9.00], [-14.50,  9.20], [-15.08,  9.80],
+      [-15.08, 11.35]
+    ]
+  },
+  {
+    id: 'moyenne',
+    name: 'Moyenne Guinée',
+    subtitle: 'Fouta Djallon — Highlands',
+    icon: '⛰️',
+    psh_dry: 5.8, psh_rainy: 4.2,
+    prefectures: 'Labé, Mamou, Dalaba, Pita, Mali, Lélouma, Koubia, Tougué',
+    desc: 'Hauts plateaux du Fouta Djallon. Altitude favorable à l\'efficacité des panneaux.',
+    coords: [
+      [-13.20, 12.35], [-12.50, 12.05], [-12.00, 11.20],
+      [-11.50, 10.55], [-10.80, 10.05], [-10.30, 10.50],
+      [-10.20, 11.05], [-10.50, 11.85], [-10.80, 12.35],
+      [-11.20, 12.62], [-12.00, 12.62], [-12.85, 12.62],
+      [-13.20, 12.35]
+    ]
+  },
+  {
+    id: 'haute',
+    name: 'Haute Guinée',
+    subtitle: 'Savane Orientale',
+    icon: '🌾',
+    psh_dry: 6.5, psh_rainy: 4.5,
+    prefectures: 'Kankan, Siguiri, Kouroussa, Mandiana, Dinguiraye, Faranah, Kérouané',
+    desc: 'Zone sahélo-soudanienne. Ciel dégagé la majorité de l\'année. Meilleur potentiel solaire du pays.',
+    coords: [
+      [-10.80, 12.35], [-11.20, 12.62], [-10.30, 12.62],
+      [-9.00,  12.68], [-8.00,  12.60], [-7.65,  12.25],
+      [-7.65,  10.10], [-8.50,   9.55], [-9.50,   9.85],
+      [-10.30,  10.05], [-10.20, 11.05], [-10.50, 11.85],
+      [-10.80, 12.35]
+    ]
+  },
+  {
+    id: 'forestiere',
+    name: 'Guinée Forestière',
+    subtitle: 'Région forestière du Sud-Est',
+    icon: '🌿',
+    psh_dry: 5.2, psh_rainy: 3.5,
+    prefectures: 'N\'Zérékoré, Macenta, Guéckédou, Kissidougou, Lola, Beyla, Yomou',
+    desc: 'Forêt dense équatoriale. Pluviométrie élevée. Fort ensoleillement en saison sèche.',
+    coords: [
+      [-11.55,  9.85], [-11.50, 10.55], [-10.80, 10.05],
+      [-10.30, 10.05], [-9.50,   9.85], [-8.50,   9.55],
+      [-7.65,  10.10], [-7.65,   8.00], [-8.00,   7.50],
+      [-9.00,   7.20], [-9.80,   7.20], [-10.50,  7.60],
+      [-11.20,  8.20], [-11.80,  8.80], [-12.00,  9.20],
+      [-11.55,  9.85]
+    ]
+  }
+];
+
+const RANKS = ['🥇 Meilleur', '🥈 2ème', '🥉 3ème', '4ème'];
+
+/* ════════════════════════════════════════════════
+   COULEUR selon PSH
+════════════════════════════════════════════════ */
+function pshColor(psh) {
+  if (psh >= 6.2) return '#BF360C';
+  if (psh >= 5.8) return '#E64A19';
+  if (psh >= 5.4) return '#F57C00';
+  if (psh >= 5.0) return '#FFA726';
+  if (psh >= 4.5) return '#FFD54F';
+  if (psh >= 4.0) return '#FFF176';
+  return '#FFF9C4';
+}
+
+function pshTextColor(psh) {
+  return psh >= 5.0 ? '#fff' : '#333';
+}
+
+/* ════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let season = 'dry';
+let activeZone = null;
+let layers = {};
+let map;
+
+/* ════════════════════════════════════════════════
+   INIT MAP
+════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  map = L.map('map', {
+    center: [10.5, -11.2],
+    zoom: 7,
+    zoomControl: false,
+    attributionControl: true,
+  });
+
+  // Tile layer — CartoDB Voyager (propre et lisible)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/">OSM</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19,
+  }).addTo(map);
+
+  // Zoom controls (repositionnés en haut à droite)
+  L.control.zoom({ position: 'topright' }).addTo(map);
+
+  // Attendre que les tuiles se chargent
+  map.whenReady(() => {
+    setTimeout(() => {
+      document.getElementById('mapLoading').classList.add('hide');
+    }, 600);
+  });
+
+  renderZones();
+  renderLegend();
+  addCityMarkers();
+});
+
+/* ════════════════════════════════════════════════
+   ZONES GeoJSON
+════════════════════════════════════════════════ */
+function zonePsh(z) {
+  return season === 'dry' ? z.psh_dry : z.psh_rainy;
+}
+
+function renderZones() {
+  // Trier par PSH pour le classement
+  const sorted = [...ZONES].sort((a, b) => b.psh_dry - a.psh_dry);
+
+  ZONES.forEach(zone => {
+    const rank = sorted.findIndex(z => z.id === zone.id);
+    const psh  = zonePsh(zone);
+    const color = pshColor(psh);
+
+    const geojson = {
+      type: 'Feature',
+      properties: { ...zone, rank },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [zone.coords],
+      }
+    };
+
+    const layer = L.geoJSON(geojson, {
+      style: {
+        fillColor: color,
+        fillOpacity: 0.72,
+        color: '#fff',
+        weight: 2.5,
+        opacity: 0.9,
+      }
+    });
+
+    // Tooltip
+    layer.bindTooltip(
+      `<b>${zone.name}</b><br>${psh}h/j ☀️`,
+      { sticky: true, direction: 'top', offset: [0, -4] }
+    );
+
+    // Events
+    layer.on('mouseover', () => {
+      if (activeZone !== zone.id) {
+        layer.setStyle({ fillOpacity: 0.88, weight: 3 });
+      }
+    });
+    layer.on('mouseout', () => {
+      if (activeZone !== zone.id) {
+        layer.setStyle({ fillOpacity: 0.72, weight: 2.5 });
+      }
+    });
+    layer.on('click', () => showZone(zone.id, rank));
+
+    layer.addTo(map);
+    layers[zone.id] = layer;
+  });
+}
+
+/* ════════════════════════════════════════════════
+   SAISON TOGGLE
+════════════════════════════════════════════════ */
+function setSeason(s) {
+  season = s;
+  document.getElementById('sBtnDry').classList.toggle('act',   s === 'dry');
+  document.getElementById('sBtnRainy').classList.toggle('act', s === 'rainy');
+
+  // Mettre à jour les couleurs
+  ZONES.forEach(zone => {
+    const psh   = zonePsh(zone);
+    const color = pshColor(psh);
+    layers[zone.id].setStyle({ fillColor: color });
+    layers[zone.id].setTooltipContent(`<b>${zone.name}</b><br>${psh}h/j ☀️`);
+  });
+
+  // Mettre à jour le panel si ouvert
+  if (activeZone) {
+    const zone = ZONES.find(z => z.id === activeZone);
+    if (zone) updatePanel(zone, [...ZONES].sort((a,b)=>b.psh_dry-a.psh_dry).findIndex(z=>z.id===zone.id));
+  }
+
+  renderLegend();
+}
+
+/* ════════════════════════════════════════════════
+   INFO PANEL
+════════════════════════════════════════════════ */
+function showZone(id, rank) {
+  const zone = ZONES.find(z => z.id === id);
+  if (!zone) return;
+
+  // Reset previous
+  if (activeZone && activeZone !== id) {
+    const prev = ZONES.find(z => z.id === activeZone);
+    if (prev) {
+      layers[prev.id].setStyle({ fillOpacity: 0.72, weight: 2.5 });
+    }
+  }
+
+  // Highlight selected
+  activeZone = id;
+  layers[id].setStyle({ fillOpacity: 0.92, weight: 4, color: '#FCD116' });
+
+  updatePanel(zone, rank);
+  document.getElementById('infoPanel').classList.add('show');
+}
+
+function updatePanel(zone, rank) {
+  const psh  = zonePsh(zone);
+  const maxPsh = 6.5;
+  const pct  = Math.round((psh / maxPsh) * 100);
+  const color = pshColor(psh);
+
+  document.getElementById('ipIcon').textContent  = zone.icon;
+  document.getElementById('ipName').textContent  = zone.name;
+  document.getElementById('ipSub').textContent   = zone.subtitle;
+  document.getElementById('ipPsh').textContent   = psh + 'h';
+  document.getElementById('ipKwh').textContent   = psh.toFixed(1);
+  document.getElementById('ipRank').textContent  = RANKS[rank] || (rank+1)+'ème';
+  document.getElementById('ipBarPct').textContent = pct + '%';
+  document.getElementById('ipBarFill').style.cssText = `width:${pct}%;background:${color}`;
+  document.getElementById('ipPrefs').textContent = zone.prefectures;
+
+  // Boutons → stockent l'id pour openSimulator()
+  document.getElementById('ipSimBtn').dataset.zone = zone.id;
+  document.getElementById('ipMobBtn').dataset.zone = zone.id;
+}
+
+function closePanel() {
+  document.getElementById('infoPanel').classList.remove('show');
+  if (activeZone) {
+    layers[activeZone].setStyle({ fillOpacity: 0.72, weight: 2.5, color: '#fff' });
+    activeZone = null;
+  }
+}
+
+function openSimulator(target) {
+  const zone = activeZone || 'conakry';
+  const url  = (target === 'mobile' ? 'mobile.html' : 'index.html') + '?region=' + zone;
+  window.location.href = url;
+}
+
+/* ════════════════════════════════════════════════
+   LÉGENDE
+════════════════════════════════════════════════ */
+function renderLegend() {
+  const sorted = [...ZONES].sort((a, b) => {
+    const pA = season === 'dry' ? a.psh_dry : a.psh_rainy;
+    const pB = season === 'dry' ? b.psh_dry : b.psh_rainy;
+    return pB - pA;
+  });
+
+  document.getElementById('legendItems').innerHTML = sorted.map((z, i) => {
+    const psh = season === 'dry' ? z.psh_dry : z.psh_rainy;
+    return `<div class="li" onclick="showZone('${z.id}', ${i})">
+      <div class="li-dot" style="background:${pshColor(psh)}"></div>
+      <span class="li-name">${z.icon} ${z.name}</span>
+      <span class="li-psh">${psh}h</span>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════
+   MARQUEURS VILLES CLÉS
+════════════════════════════════════════════════ */
+function addCityMarkers() {
+  const cities = [
+    { name: 'Conakry',     lat:  9.54, lng: -13.68, capital: true  },
+    { name: 'Labé',        lat: 11.32, lng: -12.29, capital: false },
+    { name: 'Mamou',       lat: 10.37, lng: -12.08, capital: false },
+    { name: 'Kankan',      lat: 10.39, lng:  -9.31, capital: false },
+    { name: 'Siguiri',     lat: 11.42, lng:  -9.17, capital: false },
+    { name: 'Faranah',     lat: 10.04, lng: -10.74, capital: false },
+    { name: 'Boké',        lat: 10.93, lng: -14.30, capital: false },
+    { name: 'N\'Zérékoré', lat:  7.76, lng:  -8.82, capital: false },
+    { name: 'Macenta',     lat:  8.55, lng:  -9.47, capital: false },
+    { name: 'Kindia',      lat: 10.06, lng: -12.86, capital: false },
+  ];
+
+  cities.forEach(city => {
+    const size = city.capital ? 10 : 6;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:${size}px;height:${size}px;border-radius:50%;
+        background:${city.capital ? '#FCD116' : '#fff'};
+        border:2px solid ${city.capital ? '#1A3A5C' : '#555'};
+        box-shadow:0 1px 4px rgba(0,0,0,.3);
+      "></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2],
+    });
+
+    const marker = L.marker([city.lat, city.lng], { icon }).addTo(map);
+
+    const tooltip = L.tooltip({
+      permanent: true,
+      direction: city.capital ? 'right' : 'top',
+      offset: [size/2 + 3, 0],
+      className: city.capital ? 'capital-tooltip' : '',
+    }).setContent(`<b>${city.name}</b>${city.capital ? ' 🏛️' : ''}`);
+
+    marker.bindTooltip(tooltip);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   FERMETURE PANEL au clic hors
+════════════════════════════════════════════════ */
+map && map.on('click', (e) => {
+  // Ferme si clic dans la mer / hors zones
+  if (!activeZone) return;
+  // vérifie si le clic était sur un layer
+  let hit = false;
+  Object.values(layers).forEach(l => {
+    try { if (l.getBounds().contains(e.latlng)) hit = true; } catch(e) {}
+  });
+  if (!hit) closePanel();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="90" fill="#1A3A5C"/>
+  <!-- Rayons diagonaux -->
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116"/>
+  <rect x="238" y="378" width="36" height="90" rx="18" fill="#FCD116"/>
+  <rect x="44" y="238" width="90" height="36" rx="18" fill="#FCD116"/>
+  <rect x="378" y="238" width="90" height="36" rx="18" fill="#FCD116"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(45 256 256)"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(90 256 256)"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(135 256 256)"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(180 256 256)"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(225 256 256)"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(270 256 256)"/>
+  <rect x="238" y="44" width="36" height="90" rx="18" fill="#FCD116" transform="rotate(315 256 256)"/>
+  <!-- Cercle central -->
+  <circle cx="256" cy="256" r="100" fill="#FCD116"/>
+  <!-- Panneau solaire stylisé -->
+  <rect x="196" y="216" width="120" height="80" rx="6" fill="#1A3A5C"/>
+  <line x1="256" y1="216" x2="256" y2="296" stroke="#FCD116" stroke-width="4"/>
+  <line x1="196" y1="256" x2="316" y2="256" stroke="#FCD116" stroke-width="4"/>
+  <line x1="196" y1="236" x2="316" y2="236" stroke="#FCD116" stroke-width="2.5"/>
+  <line x1="196" y1="276" x2="316" y2="276" stroke="#FCD116" stroke-width="2.5"/>
+  <line x1="226" y1="216" x2="226" y2="296" stroke="#FCD116" stroke-width="2.5"/>
+  <line x1="286" y1="216" x2="286" y2="296" stroke="#FCD116" stroke-width="2.5"/>
+</svg>

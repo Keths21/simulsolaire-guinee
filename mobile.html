@@ -1,525 +1,654 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="SimulSolaire"/>
-  <meta name="theme-color" content="#E8751A"/>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="icon.svg"/>
-  <title>SimulSolaire Guinée</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    :root {
-      --pri: #E8751A; --pri-d: #C05E0F;
-      --sec: #1A3A5C; --acc: #FCD116;
-      --grn: #27AE60; --red: #E74C3C;
-      --bg: #F0F4F8; --wh: #fff;
-      --txt: #1C2B3A; --txt2: #6B7280;
-      --brd: #E5E7EB; --rad: 16px; --rads: 12px;
-      --sh: 0 2px 12px rgba(0,0,0,.08);
-      --shl: 0 8px 32px rgba(0,0,0,.16);
-      --sat: env(safe-area-inset-top,0px);
-      --sab: env(safe-area-inset-bottom,0px);
-    }
-    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{height:100%;overflow:hidden;
-      font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
-      background:var(--bg);color:var(--txt);font-size:15px}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="INNOVEA Solar">
+<meta name="theme-color" content="#0B1E3D">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>INNOVEA GROUP | Simulateur Solaire</title>
+<style>
+:root {
+  --navy:  #0B1E3D;
+  --navy2: #1A3A5C;
+  --white: #FFFFFF;
+  --light: #F0F4F8;
+  --light2:#E4EBF2;
+  --red:   #CE1126;
+  --yell:  #FCD116;
+  --grn:   #009460;
+  --ora:   #E8751A;
+  --ora2:  #F5A623;
+  --wa:    #25D366;
+  --text:  #1A2D42;
+  --muted: #6B7C93;
+  --brd:   rgba(0,0,0,0.08);
+  --sh:    0 2px 12px rgba(0,0,0,.08);
+  --shl:   0 8px 32px rgba(0,0,0,.18);
+  --r:     16px;
+  --sat:   env(safe-area-inset-top,0px);
+  --sab:   env(safe-area-inset-bottom,0px);
+  --sal:   env(safe-area-inset-left,0px);
+  --sar:   env(safe-area-inset-right,0px);
+}
 
-    /* ── HEADER ─────────────────────────────────── */
-    .hdr{
-      position:fixed;top:0;left:0;right:0;z-index:100;
-      background:var(--sec);
-      padding:calc(10px + var(--sat)) 16px 10px;
-      display:flex;align-items:center;gap:10px;
-      box-shadow:0 2px 16px rgba(0,0,0,.25);
-    }
-    .hdr-logo{
-      width:36px;height:36px;background:var(--acc);border-radius:50%;
-      display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
-    }
-    .hdr-title h1{color:#fff;font-size:.95rem;font-weight:800}
-    .hdr-title p{color:rgba(255,255,255,.65);font-size:.65rem;margin-top:1px}
-    .step-dots{margin-left:auto;display:flex;gap:5px;align-items:center}
-    .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .3s}
-    .dot.done{background:var(--grn)}
-    .dot.cur{width:22px;border-radius:4px;background:var(--acc)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--light);color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased}
 
-    /* ── BOTTOM NAV ──────────────────────────────── */
-    .nav{
-      position:fixed;bottom:0;left:0;right:0;z-index:100;
-      background:var(--wh);border-top:1px solid var(--brd);
-      display:flex;padding-bottom:var(--sab);
-      box-shadow:0 -4px 20px rgba(0,0,0,.07);
-    }
-    .ni{
-      flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
-      padding:9px 4px 7px;cursor:pointer;border:none;background:none;
-      font-family:inherit;color:var(--txt2);transition:color .2s;position:relative;
-    }
-    .ni.act{color:var(--pri)}
-    .ni-ic{font-size:22px;transition:transform .2s}
-    .ni.act .ni-ic{transform:scale(1.1)}
-    .ni-lb{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-    .ni-badge{
-      position:absolute;top:5px;right:calc(50% - 18px);
-      background:var(--red);color:#fff;font-size:.55rem;font-weight:800;
-      min-width:16px;height:16px;border-radius:8px;
-      display:flex;align-items:center;justify-content:center;padding:0 3px;
-    }
+/* ── HEADER ──────────────────────────────────── */
+.hdr{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--navy);
+  padding:calc(12px + var(--sat)) 16px 12px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 2px 16px rgba(0,0,0,.3);
+}
+.hdr-logo{
+  width:34px;height:34px;background:var(--yell);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;box-shadow:0 0 12px rgba(252,209,22,.35);
+}
+.hdr-info{flex:1}
+.hdr-info h1{color:#fff;font-size:.9rem;font-weight:800;line-height:1.2}
+.hdr-info p{color:rgba(255,255,255,.5);font-size:.62rem;margin-top:1px}
+.step-dots{display:flex;gap:5px;align-items:center;margin-left:auto}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
+.dot.done{background:var(--grn)}
+.dot.cur{width:22px;border-radius:4px;background:var(--yell)}
 
-    /* ── VIEWS ───────────────────────────────────── */
-    .view-wrap{position:fixed;inset:0;overflow:hidden}
-    .view{
-      position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-      padding:calc(56px + var(--sat) + 10px) 16px calc(58px + var(--sab) + 10px);
-      transform:translateX(100%);
-      transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;
-    }
-    .view.act{transform:translateX(0)}
-    .view.prv{transform:translateX(-28%)}
+/* ── BOTTOM NAV ───────────────────────────────── */
+.bnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--white);border-top:1px solid var(--brd);
+  display:flex;padding-bottom:var(--sab);
+  box-shadow:0 -3px 18px rgba(0,0,0,.07);
+}
+.ni{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:9px 4px 7px;cursor:pointer;border:none;background:none;
+  font-family:inherit;color:var(--muted);transition:color .2s;position:relative;
+}
+.ni.act{color:var(--ora)}
+.ni-ic{font-size:21px;transition:transform .2s}
+.ni.act .ni-ic{transform:scale(1.1)}
+.ni-lb{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.ni-badge{
+  position:absolute;top:5px;right:calc(50% - 17px);
+  background:var(--red);color:#fff;
+  font-size:.52rem;font-weight:800;
+  min-width:15px;height:15px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;padding:0 3px;
+}
 
-    /* ── TYPOGRAPHY HELPERS ──────────────────────── */
-    .sec-head{
-      font-size:.7rem;font-weight:700;text-transform:uppercase;
-      letter-spacing:.6px;color:var(--txt2);margin-bottom:9px;
-    }
-    .card{background:var(--wh);border-radius:var(--rad);box-shadow:var(--sh);margin-bottom:12px}
-    .cp{padding:15px}
+/* ── VIEWS ────────────────────────────────────── */
+.view-wrap{position:fixed;inset:0;overflow:hidden}
+.view{
+  position:absolute;inset:0;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:calc(58px + var(--sat) + 8px) 16px calc(64px + var(--sab) + 8px);
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+}
+.view.act{transform:translateX(0)}
+.view.prv{transform:translateX(-28%)}
 
-    /* ─────────────────────────────────────────────
-       VIEW 1 — CONFIG
-    ───────────────────────────────────────────── */
-    .region-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-    .rc{
-      background:var(--wh);border-radius:var(--rads);border:2.5px solid var(--brd);
-      padding:14px 8px;cursor:pointer;text-align:center;
-      transition:all .2s;box-shadow:var(--sh);
-    }
-    .rc.act{border-color:var(--pri);background:#FFF5ED;box-shadow:0 0 0 1px var(--pri),var(--sh)}
-    .rc .ri{font-size:26px;display:block;margin-bottom:5px}
-    .rc .rn{font-size:.8rem;font-weight:700;color:var(--txt)}
-    .rc .rs{font-size:.65rem;color:var(--txt2);margin-top:1px}
+/* ── TYPOGRAPHY ───────────────────────────────── */
+.sec-h{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:9px}
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:11px}
+.cp{padding:14px}
 
-    .tpair{display:flex;gap:8px;margin-bottom:14px}
-    .tbtn{
-      flex:1;padding:12px 6px;border-radius:var(--rads);border:2px solid var(--brd);
-      background:var(--wh);font-size:.85rem;font-weight:600;cursor:pointer;
-      transition:all .2s;color:var(--txt);font-family:inherit;
-    }
-    .tbtn.act{border-color:var(--pri);background:var(--pri);color:#fff}
+/* ── BUTTONS ──────────────────────────────────── */
+.btn-main{
+  width:100%;padding:15px;background:linear-gradient(135deg,var(--ora),var(--ora2));
+  color:#fff;border:none;border-radius:var(--r);
+  font-size:.97rem;font-weight:800;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 5px 18px rgba(232,117,26,.4);transition:all .2s;margin-top:4px;
+}
+.btn-main:active{transform:scale(.98);filter:brightness(.95)}
+.btn-sec{
+  width:100%;padding:13px;background:transparent;
+  color:var(--navy);border:2px solid var(--navy);border-radius:var(--r);
+  font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .2s;margin-top:8px;
+}
+.btn-sec:active{background:var(--navy);color:#fff}
+.btn-wa{
+  width:100%;padding:15px;background:var(--wa);color:#fff;border:none;
+  border-radius:var(--r);font-size:.97rem;font-weight:800;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 5px 18px rgba(37,211,102,.35);transition:all .2s;
+}
+.btn-wa:active{filter:brightness(.93)}
 
-    .pills{display:flex;gap:8px;margin-bottom:14px}
-    .pill{
-      flex:1;padding:11px 6px;border-radius:30px;border:2px solid var(--brd);
-      background:var(--wh);font-size:.9rem;font-weight:700;cursor:pointer;
-      transition:all .2s;color:var(--txt);font-family:inherit;text-align:center;
-    }
-    .pill.act{border-color:var(--sec);background:var(--sec);color:#fff}
+/* ═══════════════════════════════════════════
+   VIEW 0 — HERO
+═══════════════════════════════════════════ */
+#v0{
+  background:linear-gradient(160deg,#07182E 0%,#0B1E3D 50%,#112840 100%);
+  padding:0!important;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.hero-top{
+  padding:calc(58px + var(--sat) + 20px) 20px 16px;
+  flex-shrink:0;text-align:center;
+}
+.guinea-line{display:flex;justify-content:center;gap:8px;margin-bottom:18px;font-size:1rem;font-weight:900}
+.g1{color:var(--red)}.g2{color:var(--yell)}.g3{color:var(--grn)}
 
-    .info-box{
-      background:linear-gradient(135deg,var(--sec),#0D2340);
-      border-radius:var(--rad);padding:16px;margin-bottom:14px;color:#fff;
-    }
-    .info-box h3{font-size:.9rem;font-weight:800;margin-bottom:6px;color:var(--acc)}
-    .info-box p{font-size:.78rem;line-height:1.5;opacity:.85}
+.house-wrap{width:100%;max-width:340px;margin:0 auto;filter:drop-shadow(0 12px 28px rgba(0,0,0,.5))}
+.house-wrap svg{width:100%}
 
-    .next-btn{
-      width:100%;padding:16px;background:var(--pri);color:#fff;border:none;
-      border-radius:var(--rad);font-size:1rem;font-weight:800;cursor:pointer;
-      font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;
-      box-shadow:0 4px 16px rgba(232,117,26,.4);transition:all .2s;margin-top:4px;
-    }
-    .next-btn:active{transform:scale(.98)}
+.hero-h1{
+  font-size:clamp(1.55rem,6vw,2.4rem);font-weight:900;color:#fff;
+  line-height:1.12;letter-spacing:-.3px;margin-bottom:10px;margin-top:16px;
+}
+.hero-h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--yell),var(--ora));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:.88rem;color:rgba(255,255,255,.62);margin-bottom:22px;line-height:1.6}
 
-    /* ─────────────────────────────────────────────
-       VIEW 2 — APPAREILS
-    ───────────────────────────────────────────── */
-    .cat-wrap{
-      position:sticky;top:0;z-index:10;background:var(--bg);
-      padding:8px 0 6px;margin:0 -16px 10px;
-    }
-    .cat-scroll{
-      display:flex;gap:8px;overflow-x:auto;padding:0 16px;scrollbar-width:none;
-    }
-    .cat-scroll::-webkit-scrollbar{display:none}
-    .cc{
-      flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;
-      padding:7px 12px;border-radius:30px;background:var(--wh);
-      border:2px solid var(--brd);cursor:pointer;transition:all .2s;font-family:inherit;
-    }
-    .cc.act{background:var(--pri);border-color:var(--pri);color:#fff}
-    .cc .ci{font-size:18px}
-    .cc .cn{font-size:.62rem;font-weight:700;white-space:nowrap}
+.benefits-row{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:22px;
+}
+.bc{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:11px 8px;text-align:center;
+}
+.bc .bi{font-size:18px;display:block;margin-bottom:3px}
+.bc .bl{font-size:.67rem;color:rgba(255,255,255,.72);font-weight:600}
 
-    .app-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:90px}
-    .ac{
-      background:var(--wh);border:2px solid var(--brd);border-radius:var(--rads);
-      padding:14px 10px;cursor:pointer;display:flex;flex-direction:column;
-      align-items:center;gap:5px;text-align:center;transition:all .2s;
-      position:relative;box-shadow:var(--sh);user-select:none;
-    }
-    .ac:active{transform:scale(.96)}
-    .ac.add{border-color:var(--grn);background:#F0FFF5}
-    .ac .ai{font-size:28px}
-    .ac .an{font-size:.74rem;font-weight:700;line-height:1.3;color:var(--txt)}
-    .ac .ap{font-size:.68rem;font-weight:700;color:var(--pri)}
-    .abadge{
-      position:absolute;top:6px;right:6px;background:var(--grn);color:#fff;
-      font-size:.58rem;font-weight:800;min-width:18px;height:18px;border-radius:9px;
-      display:flex;align-items:center;justify-content:center;padding:0 3px;
-    }
+.hero-foot{
+  padding:0 20px calc(12px + var(--sab));
+  flex-shrink:0;
+}
+.trust-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px}
+.trust{font-size:.67rem;color:rgba(255,255,255,.4);font-weight:600;display:flex;align-items:center;gap:4px}
+.tc{color:var(--grn)}
+.daw-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(252,209,22,.12);border:1px solid rgba(252,209,22,.25);
+  border-radius:30px;padding:5px 13px;
+  font-size:.7rem;font-weight:700;color:var(--yell);
+  margin-bottom:14px;
+}
 
-    /* Floating total */
-    .float-bar{
-      position:fixed;bottom:calc(58px + var(--sab));left:0;right:0;
-      z-index:50;padding:0 16px 8px;pointer-events:none;
-    }
-    .fb-inner{
-      background:var(--sec);border-radius:var(--rad);padding:12px 16px;
-      display:flex;align-items:center;gap:12px;box-shadow:var(--shl);
-      pointer-events:all;transition:transform .3s,opacity .3s;
-    }
-    .float-bar.hidden .fb-inner{transform:translateY(20px);opacity:0;pointer-events:none}
-    .fb-txt{flex:1}
-    .fb-count{font-size:.7rem;color:rgba(255,255,255,.7)}
-    .fb-val{font-size:1.15rem;font-weight:800;color:var(--acc)}
-    .fb-btn{
-      background:var(--pri);color:#fff;border:none;border-radius:10px;
-      padding:9px 14px;font-size:.82rem;font-weight:700;cursor:pointer;
-      font-family:inherit;white-space:nowrap;
-    }
+/* ═══════════════════════════════════════════
+   VIEW 1 — BUILDING + OBJECTIVE
+═══════════════════════════════════════════ */
+.btype-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.bcard{
+  background:var(--white);border:2px solid var(--brd);border-radius:var(--r);
+  padding:16px 10px;cursor:pointer;text-align:center;
+  transition:all .2s;box-shadow:var(--sh);user-select:none;
+}
+.bcard:active{transform:scale(.96)}
+.bcard.sel{border-color:var(--ora);background:#FFF5EC;box-shadow:0 0 0 2px rgba(232,117,26,.15),var(--sh)}
+.bcard .bci{font-size:30px;display:block;margin-bottom:6px}
+.bcard .bcn{font-size:.8rem;font-weight:700;color:var(--text)}
+.bcard .bcd{font-size:.63rem;color:var(--muted);margin-top:1px}
+.bcard.sel .bcn{color:var(--ora)}
 
-    /* ─────────────────────────────────────────────
-       VIEW 3 — RÉSULTATS
-    ───────────────────────────────────────────── */
-    .meter{background:var(--sec);border-radius:var(--rad);padding:15px;margin-bottom:12px}
-    .mrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-    .mrow:last-child{margin-bottom:0}
-    .mlbl{color:rgba(255,255,255,.8);font-size:.73rem;font-weight:600;min-width:110px}
-    .mtrk{flex:1;height:14px;background:rgba(255,255,255,.12);border-radius:7px;overflow:hidden}
-    .mfill{height:100%;border-radius:7px;transition:width .6s}
-    .mfill.prod{background:linear-gradient(90deg,#27AE60,#2ECC71)}
-    .mfill.conso{background:linear-gradient(90deg,var(--pri),#F5A623)}
-    .mfill.over{background:linear-gradient(90deg,#C0392B,var(--red))}
-    .mval{color:#fff;font-size:.76rem;font-weight:700;min-width:72px;text-align:right}
+.obj-list{display:flex;flex-direction:column;gap:9px;margin-bottom:18px}
+.ocard{
+  background:var(--white);border:2px solid var(--brd);border-radius:var(--r);
+  padding:13px 12px;cursor:pointer;display:flex;align-items:center;gap:11px;
+  transition:all .2s;box-shadow:var(--sh);user-select:none;
+}
+.ocard:active{transform:scale(.98)}
+.ocard.sel{border-color:var(--ora);background:#FFF5EC}
+.ocard-ic{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.ocard .ot{font-size:.87rem;font-weight:800;color:var(--text)}
+.ocard.sel .ot{color:var(--ora)}
+.ocard .od{font-size:.73rem;color:var(--muted);margin-top:1px;line-height:1.3}
+.chk{width:20px;height:20px;border:2px solid var(--brd);border-radius:50%;margin-left:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .2s}
+.ocard.sel .chk{background:var(--ora);border-color:var(--ora);color:#fff}
 
-    .kit-card-m{
-      background:linear-gradient(145deg,#0D2340,var(--sec));
-      border-radius:var(--rad);color:#fff;padding:18px;margin-bottom:12px;
-    }
-    .kcm-badge{
-      display:inline-block;background:var(--acc);color:var(--sec);
-      font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;
-      text-transform:uppercase;margin-bottom:8px;
-    }
-    .kcm-name{font-size:1.3rem;font-weight:800;margin-bottom:3px}
-    .kcm-sub{font-size:.77rem;opacity:.75;margin-bottom:13px}
-    .kcm-comps{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
-    .kcm-comps li{display:flex;align-items:flex-start;gap:7px;font-size:.82rem;line-height:1.4}
-    .kcm-comps .ck{color:#2ECC71;flex-shrink:0;font-size:13px;margin-top:1px}
-    .kcm-price{border-top:1px solid rgba(255,255,255,.2);padding-top:12px}
-    .kcm-gnf{font-size:1.6rem;font-weight:800;color:var(--acc)}
-    .kcm-usd{font-size:.78rem;opacity:.7;margin-top:1px}
-    .kcm-note{font-size:.65rem;opacity:.5;margin-top:3px}
+/* ═══════════════════════════════════════════
+   VIEW 2 — APPAREILS
+═══════════════════════════════════════════ */
+.cat-bar{
+  position:sticky;top:0;z-index:10;
+  background:var(--light);padding:7px 0 5px;
+  margin:0 -16px 11px;
+}
+.cat-scroll{display:flex;gap:7px;overflow-x:auto;padding:0 16px;scrollbar-width:none}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cc{
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:6px 12px;border-radius:30px;background:var(--white);
+  border:2px solid var(--brd);cursor:pointer;transition:all .2s;font-family:inherit;
+}
+.cc.act{background:var(--navy);border-color:var(--navy);color:#fff}
+.cc .ci{font-size:16px}
+.cc .cn{font-size:.6rem;font-weight:700;white-space:nowrap}
 
-    .stats2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-    .stat-m{background:var(--wh);border-radius:var(--rads);padding:12px;text-align:center;box-shadow:var(--sh)}
-    .stat-m .sv{font-size:1.15rem;font-weight:800;color:var(--pri)}
-    .stat-m .sl{font-size:.66rem;color:var(--txt2);font-weight:600;margin-top:1px}
+.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:90px}
+.ac{
+  background:var(--white);border:2px solid var(--brd);border-radius:var(--r);
+  padding:13px 9px;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:4px;text-align:center;
+  transition:all .2s;position:relative;box-shadow:var(--sh);user-select:none;
+}
+.ac:active{transform:scale(.95)}
+.ac.add{border-color:var(--grn);background:#F0FFF5}
+.ac .ai{font-size:26px}
+.ac .an{font-size:.72rem;font-weight:700;line-height:1.2;color:var(--text)}
+.ac .ap{font-size:.67rem;font-weight:700;color:var(--ora)}
+.abadge{
+  position:absolute;top:5px;right:5px;
+  background:var(--grn);color:#fff;
+  font-size:.52rem;font-weight:800;min-width:16px;height:16px;
+  border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;
+}
 
-    .cov-card{background:var(--wh);border-radius:var(--rads);padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
-    .covh{display:flex;justify-content:space-between;margin-bottom:7px}
-    .covh .cl{font-size:.8rem;font-weight:700;color:var(--txt2)}
-    .covh .cp-pct{font-size:1rem;font-weight:800}
-    .cov-trk{height:11px;background:var(--bg);border-radius:6px;overflow:hidden}
-    .cov-fill{height:100%;border-radius:6px;transition:width .6s,background .3s}
+/* Floating total bar */
+.float-bar{
+  position:fixed;bottom:calc(64px + var(--sab));left:0;right:0;
+  z-index:50;padding:0 14px 8px;pointer-events:none;
+}
+.fb-inner{
+  background:var(--navy);border-radius:var(--r);padding:11px 15px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:var(--shl);pointer-events:all;
+  transition:transform .3s,opacity .3s;
+}
+.float-bar.hidden .fb-inner{transform:translateY(24px);opacity:0;pointer-events:none}
+.fb-txt{flex:1}
+.fb-count{font-size:.67rem;color:rgba(255,255,255,.6)}
+.fb-val{font-size:1.1rem;font-weight:800;color:var(--yell)}
+.fb-btn{
+  background:linear-gradient(135deg,var(--ora),var(--ora2));
+  color:#fff;border:none;border-radius:10px;
+  padding:9px 14px;font-size:.82rem;font-weight:700;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
 
-    .bnr{border-radius:var(--rads);padding:10px 13px;font-size:.8rem;margin-bottom:12px;line-height:1.4}
-    .bnr.ok{background:#D4EDDA;color:#155724}
-    .bnr.warn{background:#FEF3CD;color:#7D5A00}
-    .bnr.err{background:#F8D7DA;color:#721C24}
+/* ═══════════════════════════════════════════
+   VIEW 3 — RÉSULTATS
+═══════════════════════════════════════════ */
+.res-hero-m{
+  background:linear-gradient(135deg,#07182E,#1A3A5C);
+  border-radius:var(--r);padding:18px;margin-bottom:12px;
+  text-align:center;color:#fff;
+}
+.rhl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.45);margin-bottom:7px}
+.rhk{font-size:3rem;font-weight:900;color:var(--yell);line-height:1;letter-spacing:-2px}
+.rhu{font-size:1rem;color:rgba(255,255,255,.5)}
+.rhc{font-size:.75rem;color:rgba(255,255,255,.55);margin-top:6px}
 
-    /* Accordéon appareils dans résultats */
-    .accord{background:var(--wh);border-radius:var(--rads);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden}
-    .accord-hd{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:14px 16px;cursor:pointer;user-select:none;
-    }
-    .accord-hd span{font-size:.88rem;font-weight:700}
-    .accord-arr{font-size:11px;transition:transform .25s;color:var(--txt2)}
-    .accord-bd{max-height:0;overflow:hidden;transition:max-height .35s ease}
-    .accord-bd.open{max-height:600px}
-    .accord-inner{padding:0 16px 12px}
-    .si{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--brd);font-size:.82rem}
-    .si:last-child{border-bottom:none}
-    .si-icon{font-size:18px;flex-shrink:0}
-    .si-name{flex:1;line-height:1.3}
-    .si-qty{font-size:.72rem;color:var(--txt2)}
-    .si-val{font-weight:700;color:var(--pri);white-space:nowrap}
+/* Pack card mobile */
+.pack-card-m{background:var(--white);border-radius:var(--r);overflow:hidden;box-shadow:var(--shl);margin-bottom:12px}
+.pkm-hd{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between}
+.pkm-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:linear-gradient(135deg,var(--ora),var(--ora2));
+  color:#fff;font-size:.67rem;font-weight:800;
+  padding:3px 10px;border-radius:30px;text-transform:uppercase;
+}
+.pkm-rec{font-size:.73rem;color:var(--grn);font-weight:700}
+.pkm-name{font-size:1.45rem;font-weight:900;color:var(--navy);padding:0 16px 2px}
+.pkm-desc{font-size:.78rem;color:var(--muted);padding:0 16px 14px;line-height:1.4}
+.pkm-specs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--brd);border-top:1px solid var(--brd)}
+.spec-it{background:var(--white);padding:11px 13px}
+.sil{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.siv{font-size:.92rem;font-weight:800;color:var(--navy);margin-top:2px}
+.siu{font-size:.62rem;color:var(--muted)}
+.pkm-price{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--light)}
+.pkm-price .pf{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:2px}
+.pkm-price .pv{font-size:1.3rem;font-weight:900;color:var(--navy)}
+.pkm-price .pc{font-size:.78rem;color:var(--muted)}
+.pkm-price .pr{text-align:right;font-size:.68rem;color:var(--muted);line-height:1.5}
 
-    /* Coût */
-    .cost-card{background:var(--wh);border-radius:var(--rads);padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
-    .cost-card h4{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt2);margin-bottom:10px}
-    .cl{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--brd);font-size:.82rem}
-    .cl:last-child{border-bottom:none}
-    .cl.tot{font-weight:800;font-size:.9rem;color:var(--sec);border-bottom:none;border-top:2px solid var(--brd);padding-top:10px;margin-top:2px}
+/* AI box */
+.ai-box{background:var(--white);border-radius:var(--r);padding:14px 15px;margin-bottom:12px;box-shadow:var(--sh)}
+.ai-hd{display:flex;align-items:center;gap:6px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:8px}
+.ai-chip{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;padding:2px 7px;border-radius:20px;font-size:.6rem}
+.ai-txt{font-size:.84rem;line-height:1.6;color:var(--text)}
 
-    /* CTA results */
-    .res-ctas{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
-    .ctam{
-      width:100%;padding:16px;border:none;border-radius:var(--rads);
-      font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;
-      display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;
-    }
-    .ctam:active{transform:scale(.98)}
-    .ctam.wa{background:#25D366;color:#fff;box-shadow:0 4px 16px rgba(37,211,102,.35)}
-    .ctam.em{background:#3B82F6;color:#fff;box-shadow:0 4px 16px rgba(59,130,246,.3)}
-    .ctam.pr{background:var(--sec);color:#fff;box-shadow:var(--sh)}
-    .ctam.sk{background:transparent;color:var(--sec);border:2px solid var(--sec)}
-    .ctam.loading{opacity:.6;pointer-events:none}
+/* Accordeon appareils */
+.accord{background:var(--white);border-radius:var(--r);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden}
+.accord-hd{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;cursor:pointer;user-select:none}
+.accord-hd span{font-size:.86rem;font-weight:700}
+.accord-arr{font-size:10px;transition:transform .25s;color:var(--muted)}
+.accord-bd{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.accord-bd.open{max-height:600px}
+.accord-in{padding:0 15px 11px}
+.si{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--brd);font-size:.8rem}
+.si:last-child{border-bottom:none}
+.si-ic{font-size:17px;flex-shrink:0}
+.si-nm{flex:1;line-height:1.2}
+.si-qty{font-size:.68rem;color:var(--muted)}
+.si-val{font-weight:700;color:var(--ora);white-space:nowrap}
 
-    /* Empty results */
-    .empty-r{text-align:center;padding:50px 20px;color:var(--txt2)}
-    .empty-r .ei{font-size:64px;display:block;margin-bottom:12px}
-    .empty-r p{font-size:.9rem;line-height:1.6}
-    .empty-r button{
-      margin-top:16px;padding:12px 24px;background:var(--pri);color:#fff;
-      border:none;border-radius:30px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;
-    }
+/* All packs scroll */
+.packs-sec{margin-bottom:12px}
+.packs-sec .ph{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:9px}
+.packs-scroll{display:flex;gap:9px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none}
+.packs-scroll::-webkit-scrollbar{display:none}
+.mini-pk{
+  flex-shrink:0;width:158px;background:var(--white);
+  border:2px solid var(--brd);border-radius:var(--r);
+  padding:12px 11px;box-shadow:var(--sh);
+}
+.mini-pk.ap{border-color:var(--ora);background:#FFF5EC}
+.mini-pk .mpn{font-size:.76rem;font-weight:800;color:var(--navy);margin-bottom:6px}
+.mini-pk.ap .mpn{color:var(--ora)}
+.mini-pk .mps{font-size:.69rem;color:var(--muted);margin-bottom:2px}
+.mini-pk .mpp{font-size:.8rem;font-weight:800;color:var(--navy);margin-top:8px}
 
-    /* ─────────────────────────────────────────────
-       BOTTOM SHEET — DEVIS
-    ───────────────────────────────────────────── */
-    .sheet-ov{
-      position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);
-      opacity:0;pointer-events:none;transition:opacity .3s;
-    }
-    .sheet-ov.show{opacity:1;pointer-events:all}
-    .sheet{
-      position:fixed;bottom:0;left:0;right:0;z-index:201;
-      background:var(--wh);border-radius:24px 24px 0 0;
-      padding:16px 20px calc(20px + var(--sab));
-      max-height:90vh;overflow-y:auto;
-      transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
-    }
-    .sheet-ov.show .sheet{transform:translateY(0)}
-    .sh-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 14px;cursor:grab}
-    .sheet h2{font-size:1.1rem;font-weight:800;margin-bottom:3px}
-    .sheet p{font-size:.78rem;color:var(--txt2);margin-bottom:14px}
-    .sh-sum{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.76rem;color:var(--txt2);margin-bottom:14px}
-    .fg{margin-bottom:12px}
-    .fg label{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt2);margin-bottom:4px}
-    .fg input,.fg textarea{
-      width:100%;border:1.5px solid var(--brd);border-radius:10px;
-      padding:12px;font-size:.9rem;outline:none;color:var(--txt);
-      transition:border-color .2s;font-family:inherit;background:var(--bg);
-    }
-    .fg input:focus,.fg textarea:focus{border-color:var(--pri);background:var(--wh)}
-    .fg textarea{min-height:70px;resize:none}
-    .ph-prev{font-size:.73rem;color:var(--grn);margin-top:4px;font-weight:600;min-height:18px}
-    .sh-acts{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+/* CTA block */
+.cta-block{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+.contact-inf{text-align:center;padding:10px;color:var(--muted);font-size:.78rem}
+.contact-inf strong{color:var(--navy);font-size:.88rem;display:block;margin-bottom:2px}
 
-    /* ── TOAST ── */
-    .toast{
-      position:fixed;bottom:calc(68px + var(--sab));left:50%;
-      transform:translateX(-50%) translateY(20px);
-      background:var(--sec);color:#fff;padding:10px 20px;border-radius:20px;
-      font-size:.82rem;font-weight:600;box-shadow:var(--shl);
-      opacity:0;transition:all .3s;z-index:300;white-space:nowrap;pointer-events:none;
-    }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Edu / Dawnice */
+.edu-sec{background:var(--white);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh)}
+.edu-hd{background:linear-gradient(135deg,#0B1E3D,#1A3A5C);padding:16px 16px 12px;color:#fff}
+.edu-hd h3{font-size:.92rem;font-weight:800;margin-bottom:2px}
+.edu-hd p{font-size:.73rem;opacity:.55}
+.edu-tabs{display:flex;border-bottom:1px solid var(--brd);overflow-x:auto;scrollbar-width:none}
+.edu-tabs::-webkit-scrollbar{display:none}
+.edu-tab{padding:10px 14px;font-size:.73rem;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+.edu-tab.active{color:var(--ora);border-bottom-color:var(--ora)}
+.edu-content{padding:13px 15px}
+.edu-pane{display:none;animation:fadeUp .3s ease}
+.edu-pane.active{display:block}
+.edu-term{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px dashed var(--brd)}
+.edu-term:last-child{border-bottom:none}
+.edu-badge{background:var(--navy);color:var(--yell);padding:2px 8px;border-radius:20px;font-size:.67rem;font-weight:800;white-space:nowrap;flex-shrink:0}
+.edu-def{font-size:.8rem;color:var(--text);line-height:1.5}
 
-    /* ── INSTALL BANNER ── */
-    #inst-banner{
-      position:fixed;top:calc(56px + var(--sat));left:0;right:0;z-index:90;
-      background:var(--acc);color:var(--sec);
-      padding:9px 16px;display:none;align-items:center;gap:10px;font-size:.8rem;font-weight:600;
-    }
-    #inst-banner button{
-      margin-left:auto;flex-shrink:0;background:var(--sec);color:var(--acc);
-      border:none;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer;font-family:inherit;
-    }
-    #inst-banner .ib-close{background:transparent;color:var(--sec);font-size:16px;padding:2px 6px}
-  </style>
+.ef-row{display:flex;align-items:center;justify-content:space-between;gap:3px;padding:12px 0}
+.ef-step{flex:1;text-align:center;background:var(--light);border-radius:10px;padding:10px 5px}
+.ef-step .efi{font-size:20px;display:block;margin-bottom:4px}
+.ef-step .efl{font-size:.63rem;font-weight:700;color:var(--text)}
+.ef-step .efd{font-size:.58rem;color:var(--muted);margin-top:1px}
+.ef-arr{color:var(--ora);font-size:16px;font-weight:900;flex-shrink:0}
+
+.dawnice-sec{background:linear-gradient(160deg,#07182E,#1A3A5C);border-radius:var(--r);padding:20px 16px;margin-bottom:12px;box-shadow:var(--shl)}
+.daw-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(252,209,22,.12);border:1px solid rgba(252,209,22,.25);border-radius:30px;padding:4px 12px;font-size:.68rem;font-weight:700;color:var(--yell);margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px}
+.dawnice-sec h3{font-size:1rem;font-weight:900;color:#fff;margin-bottom:4px}
+.dawnice-sec p{font-size:.79rem;color:rgba(255,255,255,.6);line-height:1.55;margin-bottom:16px}
+.daw-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.dstat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:10px 6px;text-align:center}
+.dstat .dv{font-size:1rem;font-weight:900;color:var(--yell)}
+.dstat .dl{font-size:.6rem;color:rgba(255,255,255,.48);margin-top:2px;font-weight:600}
+.daw-flags{display:flex;flex-wrap:wrap;gap:6px}
+.flag-it{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:4px 10px;font-size:.68rem;color:rgba(255,255,255,.75);font-weight:600}
+
+/* ── BOTTOM SHEET ─────────────────────────────── */
+.sheet-ov{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.sheet-ov.show{opacity:1;pointer-events:all}
+.sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:201;
+  background:var(--white);border-radius:22px 22px 0 0;
+  padding:14px 18px calc(18px + var(--sab));
+  max-height:88vh;overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .34s cubic-bezier(.4,0,.2,1);
+}
+.sheet-ov.show .sheet{transform:translateY(0)}
+.sh-handle{width:34px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 14px}
+.sheet h2{font-size:1rem;font-weight:800;margin-bottom:3px}
+.sheet p{font-size:.76rem;color:var(--muted);margin-bottom:14px}
+.sh-sum{background:var(--light);border-radius:9px;padding:9px 12px;font-size:.74rem;color:var(--muted);margin-bottom:12px}
+.ff{margin-bottom:11px}
+.ff label{display:block;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:4px}
+.ff input,.ff select{
+  width:100%;border:1.5px solid var(--brd);border-radius:10px;
+  padding:11px 12px;font-size:.88rem;outline:none;color:var(--text);
+  transition:border-color .2s;font-family:inherit;background:var(--light);
+}
+.ff input:focus,.ff select:focus{border-color:var(--ora);background:var(--white)}
+.sh-acts{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.btn-skip{background:none;border:none;width:100%;padding:12px;font-size:.88rem;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
+
+/* ── TOAST ────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:calc(72px + var(--sab));left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--navy);color:#fff;
+  padding:10px 20px;border-radius:24px;
+  font-size:.8rem;font-weight:600;
+  box-shadow:var(--shl);opacity:0;
+  transition:all .3s;z-index:300;
+  white-space:nowrap;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── INSTALL BANNER ───────────────────────────── */
+#inst-banner{
+  position:fixed;top:calc(58px + var(--sat));left:0;right:0;z-index:90;
+  background:var(--yell);color:var(--navy);
+  padding:8px 14px;display:none;align-items:center;gap:9px;font-size:.78rem;font-weight:700;
+}
+#inst-banner button{
+  margin-left:auto;flex-shrink:0;background:var(--navy);color:var(--yell);
+  border:none;border-radius:6px;padding:5px 11px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+#inst-banner .ib-x{background:transparent;color:var(--navy);font-size:15px;padding:2px 5px;margin-left:0}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
 </head>
 <body>
 
-<!-- ═══ HEADER ════════════════════════════════════ -->
+<!-- ═══ HEADER ══════════════════════════════════ -->
 <header class="hdr">
-  <a href="index.html" class="hdr-logo" title="Accueil" style="text-decoration:none;cursor:pointer;">☀️</a>
-  <div class="hdr-title">
-    <h1>SimulSolaire Guinée</h1>
-    <p id="step-label">Étape 1 — Configuration</p>
+  <div class="hdr-logo">☀️</div>
+  <div class="hdr-info">
+    <h1>INNOVEA GROUP</h1>
+    <p id="stepLabel">Accueil — Simulateur solaire</p>
   </div>
   <div class="step-dots">
-    <div class="dot cur" id="d0"></div>
+    <div class="dot" id="d0"></div>
     <div class="dot" id="d1"></div>
     <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
   </div>
 </header>
 
-<!-- ═══ INSTALL BANNER ════════════════════════════ -->
+<!-- ═══ INSTALL BANNER ══════════════════════════ -->
 <div id="inst-banner">
-  📲 Installer l'app sur votre téran
+  📲 Installer l'app sur votre écran
   <button onclick="installApp()">Installer</button>
-  <button class="ib-close" onclick="document.getElementById('inst-banner').style.display='none'">✕</button>
+  <button class="ib-x" onclick="document.getElementById('inst-banner').style.display='none'">✕</button>
 </div>
 
-<!-- ═══ VIEWS ══════════════════════════════════════ -->
+<!-- ═══ VIEWS ════════════════════════════════════ -->
 <div class="view-wrap">
 
-  <!-- VIEW 1 : CONFIG -->
-  <div class="view act" id="v0">
-    <div class="sec-head">📍 Votre région</div>
-    <div class="region-grid" id="regionGrid"></div>
+  <!-- VIEW 0 : HERO ─────────────────────────── -->
+  <div class="view act" id="v0" style="overflow-y:auto">
+    <div class="hero-top">
+      <div class="guinea-line">
+        <span class="g1">Wééé</span>
+        <span class="g2">Tèèè</span>
+        <span class="g3">Faaa</span>
+      </div>
+      <!-- House SVG -->
+      <div class="house-wrap">
+        <svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hbg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2A4A6C"/><stop offset="100%" stop-color="#1A3A5C"/>
+            </linearGradient>
+            <linearGradient id="rf" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#B00D1D"/><stop offset="100%" stop-color="#8A0A17"/>
+            </linearGradient>
+            <linearGradient id="pnl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1B3A5F"/><stop offset="100%" stop-color="#0D2340"/>
+            </linearGradient>
+            <filter id="gw"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <ellipse cx="180" cy="208" rx="155" ry="12" fill="#27AE60" opacity=".18"/>
+          <rect x="85" y="113" width="190" height="94" rx="3" fill="url(#hbg)"/>
+          <polygon points="65,117 180,44 295,117" fill="url(#rf)"/>
+          <g transform="rotate(-34,180,80)">
+            <rect x="124" y="60" width="29" height="18" rx="2" fill="url(#pnl)" stroke="#2A5280" stroke-width=".7"/>
+            <line x1="124" y1="66" x2="153" y2="66" stroke="#1E3D60" stroke-width=".5"/>
+            <line x1="124" y1="72" x2="153" y2="72" stroke="#1E3D60" stroke-width=".5"/>
+            <line x1="137" y1="60" x2="137" y2="78" stroke="#1E3D60" stroke-width=".5"/>
+            <rect x="158" y="60" width="29" height="18" rx="2" fill="url(#pnl)" stroke="#2A5280" stroke-width=".7"/>
+            <line x1="158" y1="66" x2="187" y2="66" stroke="#1E3D60" stroke-width=".5"/>
+            <line x1="158" y1="72" x2="187" y2="72" stroke="#1E3D60" stroke-width=".5"/>
+            <line x1="171" y1="60" x2="171" y2="78" stroke="#1E3D60" stroke-width=".5"/>
+            <rect x="192" y="60" width="29" height="18" rx="2" fill="url(#pnl)" stroke="#2A5280" stroke-width=".7"/>
+            <line x1="192" y1="66" x2="221" y2="66" stroke="#1E3D60" stroke-width=".5"/>
+            <line x1="192" y1="72" x2="221" y2="72" stroke="#1E3D60" stroke-width=".5"/>
+            <line x1="205" y1="60" x2="205" y2="78" stroke="#1E3D60" stroke-width=".5"/>
+          </g>
+          <rect x="98" y="136" width="38" height="32" rx="2" fill="#FCD116" opacity=".6"/>
+          <rect x="98" y="136" width="38" height="32" rx="2" fill="none" stroke="#F5A623" stroke-width="1.1"/>
+          <line x1="117" y1="136" x2="117" y2="168" stroke="#F5A623" stroke-width=".7"/>
+          <line x1="98" y1="152" x2="136" y2="152" stroke="#F5A623" stroke-width=".7"/>
+          <rect x="224" y="136" width="38" height="32" rx="2" fill="#FCD116" opacity=".3"/>
+          <rect x="224" y="136" width="38" height="32" rx="2" fill="none" stroke="#F5A623" stroke-width="1.1"/>
+          <rect x="162" y="158" width="36" height="49" rx="3" fill="#CE1126" opacity=".8"/>
+          <circle cx="192" cy="184" r="2.2" fill="#FCD116"/>
+          <circle cx="315" cy="38" r="24" fill="#FCD116" filter="url(#gw)" opacity=".88"/>
+          <circle cx="315" cy="38" r="18" fill="#FFD700"/>
+          <g stroke="#FCD116" stroke-width="1.8" stroke-linecap="round" opacity=".5">
+            <line x1="315" y1="10" x2="315" y2="5"/>
+            <line x1="315" y1="71" x2="315" y2="66"/>
+            <line x1="287" y1="38" x2="282" y2="38"/>
+            <line x1="343" y1="38" x2="348" y2="38"/>
+            <line x1="295" y1="18" x2="291" y2="14"/>
+            <line x1="335" y1="58" x2="339" y2="62"/>
+            <line x1="335" y1="18" x2="339" y2="14"/>
+            <line x1="295" y1="58" x2="291" y2="62"/>
+          </g>
+          <text x="315" y="44" font-size="12" fill="white" font-weight="900" text-anchor="middle">⚡</text>
+          <circle cx="50" cy="166" r="17" fill="#27AE60" opacity=".6"/>
+          <circle cx="39" cy="175" r="11" fill="#27AE60" opacity=".5"/>
+          <rect x="47" y="183" width="4" height="13" fill="#5D4037" opacity=".55"/>
+        </svg>
+      </div>
 
-    <div class="sec-head">🌤️ Saison</div>
-    <div class="tpair">
-      <button class="tbtn act" id="btnDry"   onclick="setSeason('dry')">☀️ Saison sèche</button>
-      <button class="tbtn"     id="btnRainy" onclick="setSeason('rainy')">🌧️ Saison des pluies</button>
+      <div class="daw-pill">⚡ Partenaire Dawnice</div>
+      <h1 class="hero-h1">FINI LES<br><em>COUPURES D'ÉLECTRICITÉ</em></h1>
+      <p class="hero-sub">Dimensionnez votre installation solaire en quelques minutes. Simple, gratuit.</p>
+
+      <div class="benefits-row">
+        <div class="bc"><span class="bi">🔋</span><span class="bl">Autonomie 24h</span></div>
+        <div class="bc"><span class="bi">💰</span><span class="bl">Économies EDG</span></div>
+        <div class="bc"><span class="bi">🛡️</span><span class="bl">Garanti 10 ans</span></div>
+        <div class="bc"><span class="bi">🌱</span><span class="bl">Énergie propre</span></div>
+      </div>
     </div>
-
-    <div class="sec-head">🔋 Autonomie (jours sans soleil)</div>
-    <div class="pills">
-      <button class="pill" id="a1" onclick="setAutonomy(1)">1 jour</button>
-      <button class="pill act" id="a2" onclick="setAutonomy(2)">2 jours</button>
-      <button class="pill" id="a3" onclick="setAutonomy(3)">3 jours</button>
+    <div class="hero-foot">
+      <button class="btn-main" onclick="goView(1)">
+        Commencer la simulation <span>→</span>
+      </button>
+      <div class="trust-row">
+        <span class="trust"><span class="tc">✓</span> Devis gratuit</span>
+        <span class="trust"><span class="tc">✓</span> Installation pro</span>
+        <span class="trust"><span class="tc">✓</span> SAV garanti</span>
+      </div>
     </div>
-
-    <div class="sec-head">⚡ Type de système</div>
-    <div class="tpair">
-      <button class="tbtn act" id="sAC" onclick="setSys('ac')">🔌 220V avec onduleur</button>
-      <button class="tbtn"     id="sDC" onclick="setSys('dc')">🔋 12V sans onduleur</button>
-    </div>
-
-    <div class="sec-head">🔌 Tension batterie</div>
-    <div class="tpair">
-      <button class="tbtn act" id="v12" onclick="setVolt(12)">12V</button>
-      <button class="tbtn"     id="v24" onclick="setVolt(24)">24V</button>
-    </div>
-
-    <div class="info-box" id="regionInfo">
-      <h3>Zone non sélectionnée</h3>
-      <p>Choisissez votre région pour voir les données d'ensoleillement.</p>
-    </div>
-
-    <a href="carte.html" style="
-        display:flex;align-items:center;justify-content:center;gap:8px;
-        width:100%;padding:13px;margin-bottom:10px;
-        background:rgba(26,58,92,0.08);color:var(--sec);
-        border:2px solid var(--sec);border-radius:var(--rad);
-        font-size:.9rem;font-weight:700;text-decoration:none;
-        transition:background .2s;
-      ">🗺️ Voir la carte solaire de Guinée</a>
-    <button class="next-btn" onclick="goView(1)">Choisir mes appareils →</button>
   </div>
 
-  <!-- VIEW 2 : APPAREILS -->
+  <!-- VIEW 1 : BÂTIMENT + OBJECTIF ─────────── -->
   <div class="view" id="v1">
-    <div class="cat-wrap">
+    <div class="sec-h">🏠 Votre bâtiment</div>
+    <div class="btype-grid" id="btypeGrid"></div>
+    <div class="sec-h">🎯 Votre objectif</div>
+    <div class="obj-list" id="objList"></div>
+    <button class="btn-main" onclick="goView(2)">Choisir mes appareils →</button>
+  </div>
+
+  <!-- VIEW 2 : APPAREILS ─────────────────────── -->
+  <div class="view" id="v2">
+    <div class="cat-bar">
       <div class="cat-scroll" id="catScroll"></div>
     </div>
     <div class="app-grid" id="appGrid"></div>
   </div>
 
-  <!-- VIEW 3 : RÉSULTATS -->
-  <div class="view" id="v2">
-    <div id="resultsContent"></div>
+  <!-- VIEW 3 : RÉSULTATS ─────────────────────── -->
+  <div class="view" id="v3">
+    <div id="resContent"></div>
   </div>
 
-</div><!-- /view-wrap -->
+</div>
 
 <!-- Floating total bar (view 2) -->
 <div class="float-bar hidden" id="floatBar">
   <div class="fb-inner">
     <div class="fb-txt">
       <div class="fb-count" id="fbCount">0 appareil</div>
-      <div class="fb-val"   id="fbVal">0 Wh/jour</div>
+      <div class="fb-val" id="fbVal">0 kWh/j</div>
     </div>
-    <button class="fb-btn" onclick="goView(2)">Voir mon kit →</button>
+    <button class="fb-btn" onclick="calcAndGoResult()">Voir mon pack →</button>
   </div>
 </div>
 
-<!-- ═══ BOTTOM NAV ═════════════════════════════════ -->
-<nav class="nav">
+<!-- ═══ BOTTOM NAV ══════════════════════════════ -->
+<nav class="bnav">
   <button class="ni act" id="ni0" onclick="goView(0)">
-    <span class="ni-ic">⚙️</span>
-    <span class="ni-lb">Config</span>
+    <span class="ni-ic">☀️</span>
+    <span class="ni-lb">Accueil</span>
   </button>
   <button class="ni" id="ni1" onclick="goView(1)">
+    <span class="ni-ic">🏠</span>
+    <span class="ni-lb">Profil</span>
+  </button>
+  <button class="ni" id="ni2" onclick="goView(2)">
     <span class="ni-ic">💡</span>
     <span class="ni-lb">Appareils</span>
     <span class="ni-badge" id="appBadge" style="display:none">0</span>
   </button>
-  <button class="ni" id="ni2" onclick="goView(2)">
-    <span class="ni-ic">📊</span>
-    <span class="ni-lb">Mon kit</span>
+  <button class="ni" id="ni3" onclick="calcAndGoResult()">
+    <span class="ni-ic">📦</span>
+    <span class="ni-lb">Mon pack</span>
   </button>
 </nav>
 
-<!-- ═══ BOTTOM SHEET — DEVIS ═══════════════════════ -->
+<!-- ═══ BOTTOM SHEET CONTACT ════════════════════ -->
 <div class="sheet-ov" id="sheetOv" onclick="closeSheet(event)">
   <div class="sheet">
     <div class="sh-handle"></div>
-    <h2>📋 Recevoir votre devis</h2>
-    <p>Renseignez les coordonnées du client pour envoyer le devis PDF.</p>
-
+    <h2>📩 Recevoir votre devis</h2>
+    <p>Un conseiller INNOVEA GROUP vous contacte avec votre devis personnalisé.</p>
     <div class="sh-sum" id="shSum"></div>
-
-    <div class="fg">
-      <label>Nom complet *</label>
-      <input type="text" id="fName" placeholder="Ex: Mamadou Diallo"/>
+    <div class="ff"><label>Prénom et nom *</label><input type="text" id="fN" placeholder="Mamadou Diallo"/></div>
+    <div class="ff"><label>Téléphone WhatsApp *</label><input type="tel" id="fP" placeholder="+224 6XX XX XX XX"/></div>
+    <div class="ff"><label>Ville / Préfecture</label><input type="text" id="fC" placeholder="Conakry, Kindia, Labé…"/></div>
+    <div class="ff"><label>Meilleur moment</label>
+      <select id="fT"><option>Matin (8h–12h)</option><option>Après-midi (12h–17h)</option><option>Soir (17h–20h)</option></select>
     </div>
-    <div class="fg">
-      <label>Téléphone / WhatsApp *</label>
-      <input type="tel" id="fPhone" placeholder="+224 6XX XX XX XX" oninput="prevPhone(this.value)"/>
-      <div class="ph-prev" id="phPrev"></div>
-    </div>
-    <div class="fg">
-      <label>Ville / Préfecture *</label>
-      <input type="text" id="fCity" placeholder="Ex: Conakry, Kankan…"/>
-    </div>
-    <div class="fg">
-      <label>Email (optionnel)</label>
-      <input type="email" id="fEmail" placeholder="exemple@email.com"/>
-    </div>
-    <div class="fg">
-      <label>Message (optionnel)</label>
-      <textarea id="fNote" placeholder="Questions, précisions…"></textarea>
-    </div>
-
     <div class="sh-acts">
-      <button class="ctam wa" id="btnWA" onclick="sendWA()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Envoyer par WhatsApp
+      <button class="btn-wa" onclick="submitWA()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Envoyer via WhatsApp
       </button>
-      <button class="ctam em" id="btnEM" onclick="sendEmail()">✉️ Envoyer par Email</button>
-      <button class="ctam sk" onclick="closeSheetDirect()">Annuler</button>
+      <button class="btn-skip" onclick="closeSheetDirect()">Annuler</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-/* ══════════════════════════════════════════════════
-   SERVICE WORKER
-══════════════════════════════════════════════════ */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () =>
-    navigator.serviceWorker.register('sw.js').catch(() => {})
-  );
-}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
-/* ══════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    PWA INSTALL
-══════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredPrompt = e;
@@ -534,691 +663,507 @@ function installApp() {
   });
 }
 
-/* ══════════════════════════════════════════════════
-   CONFIG BUSINESS
-══════════════════════════════════════════════════ */
-const BUSINESS = {
-  name: 'SimulSolaire Guinée',
-  whatsapp: '224620000000',
-  email: 'contact@simulsolaire.gn',
-  website: 'www.simulsolaire.gn',
-};
+/* ══════════════════════════════════════════
+   DONNÉES
+══════════════════════════════════════════ */
+const WA  = '224621387466';
+const PB  = 'https://simulateur.innoveagroup.tech/_pb/api/collections/leads/records';
 
-/* ══════════════════════════════════════════════════
-   DATA
-══════════════════════════════════════════════════ */
-const REGIONS = {
-  conakry:    { label:'Conakry & Basse Guinée',             dry:5.0, rainy:3.8, icon:'🌊', sub:'Coyah, Dubréka, Forécariah' },
-  moyenne:    { label:'Moyenne Guinée',                     dry:5.8, rainy:4.2, icon:'⛰️', sub:'Labé, Mamou, Dalaba, Pita' },
-  haute:      { label:'Haute Guinée',                       dry:6.5, rainy:4.5, icon:'🌾', sub:'Kankan, Siguiri, Kouroussa' },
-  forestiere: { label:'Guinée Forestière',                  dry:5.2, rainy:3.5, icon:'🌿', sub:'N\'Zérékoré, Macenta, Guéckédou' },
-};
+async function saveLead(extra = {}) {
+  const kwh  = calcTotal();
+  const pack = pickPack(kwh);
+  const b    = BUILDINGS.find(x => x.id === st.building);
+  const o    = OBJECTIVES.find(x => x.id === st.objective);
+  const apps = Object.entries(st.apps).filter(([,s]) => s.qty > 0).map(([id, s]) => {
+    const a = findApp(id); if (!a) return null;
+    return { name: a.name, qty: s.qty, hours: s.hours, kwh: +(a.w * s.qty * s.hours / 1000).toFixed(3) };
+  }).filter(Boolean);
+  try {
+    await fetch(PB, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pack: pack.name, kwh: +kwh.toFixed(2),
+        batiment:  b ? b.label : '',
+        objectif:  o ? o.label : '',
+        appareils: apps,
+        source:    'mobile',
+        ...extra
+      })
+    });
+  } catch (_) {}
+}
+
+const BUILDINGS = [
+  {id:'appartement',label:'Appartement',icon:'🏢',desc:'Studio ou F1–F4'},
+  {id:'maison',     label:'Maison',     icon:'🏠',desc:'Maison standard'},
+  {id:'villa',      label:'Villa',      icon:'🏡',desc:'Grande villa'},
+  {id:'duplex',     label:'Duplex',     icon:'🏘️',desc:'Duplex / triplex'},
+  {id:'commerce',   label:'Commerce',   icon:'🏪',desc:'Boutique, shop'},
+  {id:'bureau',     label:'Bureau',     icon:'🏢',desc:'Bureaux, agence'},
+];
+
+const OBJECTIVES = [
+  {id:'anticoupure',label:'Anti-coupure',           icon:'⚡',bg:'#FEF3CD',
+   desc:'Continuer normalement lors des coupures EDG'},
+  {id:'clim',       label:'Climatisation confortable',icon:'❄️',bg:'#DBEAFE',
+   desc:'Clim disponible toute la journée et la nuit'},
+  {id:'nuit',       label:'Autonomie nocturne',      icon:'🌙',bg:'#EDE9FE',
+   desc:'Électricité toute la nuit même sans EDG'},
+  {id:'complete',   label:'Autonomie complète',      icon:'🔋',bg:'#D1FAE5',
+   desc:'Ne plus dépendre du réseau EDG'},
+  {id:'premium',    label:'Maison premium',          icon:'🌟',bg:'#FEE2E2',
+   desc:'Installation haut de gamme, villa équipée'},
+];
 
 const CATEGORIES = [
-  { id:'eclairage',      label:'Éclairage',    icon:'💡', items:[
-    ['led3','Ampoule LED 3W','💡',3,6],['led7','Ampoule LED 7W','💡',7,6],
-    ['led12','Ampoule LED 12W','💡',12,5],['tube18','Tube LED 18W','🔦',18,5],
-    ['bureau','Lampe bureau 8W','🔆',8,4],['halo40','Halogène 40W','🔆',40,4],
+  {id:'luminaire',  label:'Éclairage',     icon:'💡', items:[
+    {id:'led',    name:'Lampes LED',        icon:'💡', w:9,    h:6,  max:16},
+    {id:'tube',   name:'Tube LED 18W',      icon:'🔦', w:18,   h:5,  max:12},
+    {id:'halo',   name:'Halogène 40W',      icon:'🔆', w:40,   h:4,  max:10},
   ]},
-  { id:'ventilation',    label:'Ventilation',  icon:'🌀', items:[
-    ['vent12v','Ventilateur 12V DC','🌀',20,10],['ventTab','Ventilateur table','🌀',35,8],
-    ['ventPied','Ventilateur pied','🌀',50,8],['ventPlaf','Ventilateur plafond','🌀',65,10],
-    ['clim1hp','Climatiseur 1CV','❄️',900,6],['clim15hp','Climatiseur 1.5CV','❄️',1400,5],
+  {id:'ventilat',   label:'Ventilation',   icon:'🌀', items:[
+    {id:'vent',   name:'Ventilateur',       icon:'🌀', w:50,   h:8,  max:24},
+    {id:'clim',   name:'Clim 9000 BTU',     icon:'❄️', w:900,  h:6,  max:12},
+    {id:'clim15', name:'Clim 1.5CV',        icon:'❄️', w:1400, h:5,  max:12},
   ]},
-  { id:'sonimage',       label:'Son & Image',  icon:'📺', items:[
-    ['tv19','TV LED 19"','📺',25,5],['tv24','TV LED 24"','📺',35,5],
-    ['tv32','TV LED 32"','📺',55,5],['tv43','TV LED 43"','📺',80,4],
-    ['deco','Décodeur TNT','📡',10,6],['hifi','Chaîne hi-fi','🎵',45,3],
-    ['radio','Radio FM','📻',5,4],['proj','Projecteur','🎬',200,3],
+  {id:'multimedia',  label:'Son & Image',  icon:'📺', items:[
+    {id:'tv',     name:'Téléviseur LED',    icon:'📺', w:100,  h:5,  max:12},
+    {id:'deco',   name:'Décodeur TNT',      icon:'📡', w:10,   h:6,  max:14},
+    {id:'hifi',   name:'Chaîne hi-fi',      icon:'🎵', w:45,   h:3,  max:8},
   ]},
-  { id:'teleinfo',       label:'Téléphonie',   icon:'📱', items:[
-    ['phone','Chargeur smartphone','📱',10,3],['tablet','Chargeur tablette','📟',18,3],
-    ['laptop','Ordinateur portable','💻',45,6],['pc','PC de bureau','🖥️',200,6],
-    ['wifi','Routeur WiFi','📶',12,18],['print','Imprimante','🖨️',60,1],
+  {id:'teleinfo',   label:'Tech',          icon:'📱', items:[
+    {id:'phone',  name:'Chargeur mobile',   icon:'📱', w:10,   h:3,  max:8},
+    {id:'laptop', name:'Ordinateur',        icon:'💻', w:65,   h:6,  max:12},
+    {id:'wifi',   name:'Routeur Wi-Fi',     icon:'📶', w:15,   h:24, max:24},
   ]},
-  { id:'electromenager', label:'Électroménager',icon:'🏠', items:[
-    ['frigo130','Réfrigérateur 130L','🧊',60,24,'moy'],['frigo200','Réfrigérateur 200L','🧊',80,24,'moy'],
-    ['congelat','Congélateur 150L','🧊',70,24,'moy'],['mixeur','Mixeur / Blender','🍹',400,0.3],
-    ['fer','Fer à repasser','👔',1000,0.5],['machine','Machine à laver','🧺',500,0.5],
-  ]},
-  { id:'pompage',        label:'Pompage',      icon:'💧', items:[
-    ['pompe037','Pompe 0.37kW','💧',370,4],['pompe075','Pompe 0.75kW','💧',750,4],
-    ['psurf','Pompe surface','💧',500,3],
-  ]},
-  { id:'outillage',      label:'Outillage',    icon:'🔧', items:[
-    ['perceuse','Perceuse électrique','🔩',500,1],['meuleuse','Meuleuse 115mm','⚙️',850,0.5],
-    ['scie','Scie circulaire','🪚',1400,0.5],['soudure','Poste à souder','🔥',2500,0.5],
+  {id:'electromen', label:'Électroménager',icon:'🏠', items:[
+    {id:'frigo',  name:'Réfrigérateur',     icon:'🧊', w:150,  h:8,  max:24},
+    {id:'congl',  name:'Congélateur',       icon:'🧊', w:150,  h:8,  max:24},
+    {id:'machine',name:'Machine à laver',   icon:'🧺', w:500,  h:1,  max:4},
+    {id:'pompe',  name:'Pompe à eau',       icon:'💧', w:500,  h:2,  max:8},
   ]},
 ];
 
-const PRICES = {
-  panel100:180000,panel150:240000,panel200:320000,panel300:450000,panel400:580000,
-  bat100_12:550000,bat150_12:780000,bat200_12:1050000,
-  bat100_24:950000,bat150_24:1300000,bat200_24:1750000,
-  ctrl20:130000,ctrl30:180000,ctrl40:250000,ctrl60:380000,ctrl80:520000,
-  inv600:220000,inv1000:350000,inv1500:500000,inv2000:650000,inv3000:950000,inv5000:1600000,
-};
+const PACKS = [
+  {id:'starter',  name:'STARTER',  inv:5,  kwc:6,  bat:15, price:'50M',
+   desc:'Idéal pour appartement ou petite maison. Couvre l\'essentiel lors des coupures.'},
+  {id:'essentiel',name:'ESSENTIEL',inv:10, kwc:12, bat:30, price:'100M',
+   desc:'Pour une maison standard. Éclairage, TV, frigo en autonomie complète.'},
+  {id:'confort',  name:'CONFORT',  inv:15, kwc:18, bat:45, price:'200M',
+   desc:'Pour villa avec 1–2 climatiseurs. Autonomie nocturne confortable.'},
+  {id:'prestige', name:'PRESTIGE', inv:20, kwc:24, bat:60, price:'300M',
+   desc:'Solution haut de gamme. Jusqu\'à 4 climatiseurs, autonomie totale.'},
+];
 
-const USD_RATE = 8600;
-
-/* ══════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    STATE
-══════════════════════════════════════════════════ */
-let cfg = { region:'conakry', season:'dry', autonomy:2, sysType:'ac', voltage:12 };
-let selected  = {};
-let activeCat = 'eclairage';
-let curView   = 0;
+══════════════════════════════════════════ */
+const st = { building:null, objective:null, apps:{}, curView:0 };
 
-/* ══════════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════════ */
-(function init() {
-  // Pré-sélection depuis la carte (?region=haute)
-  const urlRegion = new URLSearchParams(window.location.search).get('region');
-  if (urlRegion && REGIONS[urlRegion]) {
-    cfg.region = urlRegion;
-    // Bandeau de confirmation
-    const b = document.createElement('div');
-    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#27AE60;color:#fff;text-align:center;padding:10px;font-size:.82rem;font-weight:700;';
-    b.textContent = '✅ Région pré-sélectionnée depuis la carte solaire';
-    document.body.prepend(b);
-    setTimeout(() => b.remove(), 3500);
-  }
-  renderRegionGrid();
-  renderCatChips();
-  renderAppGrid();
-  updateRegionInfo();
-})();
-
-/* ══════════════════════════════════════════════════
-   VIEW NAVIGATION
-══════════════════════════════════════════════════ */
-const LABELS = ['Étape 1 — Configuration','Étape 2 — Appareils','Étape 3 — Mon kit'];
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+const VIEW_LABELS = [
+  'Accueil — Simulateur',
+  'Étape 1 — Profil',
+  'Étape 2 — Appareils',
+  'Étape 3 — Mon pack',
+];
+const DOT_LABELS = ['d0','d1','d2','d3'];
 
 function goView(idx) {
-  if (idx === 2) renderResults();
+  if (idx === 3) { calcAndGoResult(); return; }
   const views = document.querySelectorAll('.view');
-  views.forEach((v, i) => {
+  views.forEach((v,i)=>{
     v.classList.remove('act','prv');
-    if (i === idx)       v.classList.add('act');
-    else if (i < idx)    v.classList.add('prv');
+    if(i===idx) v.classList.add('act');
+    else if(i<idx) v.classList.add('prv');
   });
-  document.querySelectorAll('.ni').forEach((n,i) => n.classList.toggle('act', i===idx));
-  document.getElementById('step-label').textContent = LABELS[idx];
-  ['d0','d1','d2'].forEach((id,i) => {
-    const d = document.getElementById(id);
-    d.className = 'dot' + (i===idx?' cur':i<idx?' done':'');
+  document.querySelectorAll('.ni').forEach((n,i)=>n.classList.toggle('act',i===idx));
+  document.getElementById('stepLabel').textContent = VIEW_LABELS[idx];
+  DOT_LABELS.forEach((id,i)=>{
+    const d=document.getElementById(id);
+    d.className='dot'+(i===idx?' cur':i<idx?' done':'');
   });
-  curView = idx;
+  st.curView = idx;
   updateFloatBar();
 }
 
-/* ══════════════════════════════════════════════════
-   VIEW 1 — CONFIG
-══════════════════════════════════════════════════ */
-function renderRegionGrid() {
-  const el = document.getElementById('regionGrid');
-  el.innerHTML = Object.entries(REGIONS).map(([key, r]) => `
-    <div class="rc ${cfg.region===key?'act':''}" onclick="setRegion('${key}')">
-      <span class="ri">${r.icon}</span>
-      <div class="rn">${r.label.split(' ')[0]+' '+r.label.split(' ')[1]}</div>
-      <div class="rs">${r.sub.split(',')[0].trim()}</div>
+/* ══════════════════════════════════════════
+   VIEW 1 — BUILDINGS
+══════════════════════════════════════════ */
+function renderBuildings() {
+  document.getElementById('btypeGrid').innerHTML = BUILDINGS.map(b=>`
+    <div class="bcard ${st.building===b.id?'sel':''}" onclick="selBuilding('${b.id}')">
+      <span class="bci">${b.icon}</span>
+      <div class="bcn">${b.label}</div>
+      <div class="bcd">${b.desc}</div>
     </div>`).join('');
 }
+function selBuilding(id){ st.building=id; renderBuildings(); }
 
-function setRegion(key) {
-  cfg.region = key; renderRegionGrid(); updateRegionInfo();
+/* ══════════════════════════════════════════
+   VIEW 1 — OBJECTIVES
+══════════════════════════════════════════ */
+function renderObjectives() {
+  document.getElementById('objList').innerHTML = OBJECTIVES.map(o=>`
+    <div class="ocard ${st.objective===o.id?'sel':''}" onclick="selObj('${o.id}')">
+      <div class="ocard-ic" style="background:${o.bg}"><span style="font-size:19px">${o.icon}</span></div>
+      <div><div class="ot">${o.label}</div><div class="od">${o.desc}</div></div>
+      <div class="chk">${st.objective===o.id?'✓':''}</div>
+    </div>`).join('');
 }
+function selObj(id){ st.objective=id; renderObjectives(); }
 
-function setSeason(s) {
-  cfg.season = s;
-  document.getElementById('btnDry').classList.toggle('act', s==='dry');
-  document.getElementById('btnRainy').classList.toggle('act', s==='rainy');
-  updateRegionInfo();
-}
-
-function setAutonomy(n) {
-  cfg.autonomy = n;
-  [1,2,3].forEach(i => document.getElementById('a'+i).classList.toggle('act', i===n));
-}
-
-function setSys(t) {
-  cfg.sysType = t;
-  document.getElementById('sAC').classList.toggle('act', t==='ac');
-  document.getElementById('sDC').classList.toggle('act', t==='dc');
-}
-
-function setVolt(v) {
-  cfg.voltage = v;
-  document.getElementById('v12').classList.toggle('act', v===12);
-  document.getElementById('v24').classList.toggle('act', v===24);
-}
-
-function updateRegionInfo() {
-  const r = REGIONS[cfg.region];
-  const psh = r[cfg.season];
-  document.getElementById('regionInfo').innerHTML = `
-    <h3>${r.icon} ${r.label}</h3>
-    <p>
-      <strong>${psh}h</strong> de soleil/jour (${cfg.season==='dry'?'saison sèche':'saison des pluies'})<br>
-      Préfectures : ${r.sub}
-    </p>`;
-}
-
-/* ══════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    VIEW 2 — APPAREILS
-══════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
+let activeCat = CATEGORIES[0].id;
+
 function renderCatChips() {
-  document.getElementById('catScroll').innerHTML = CATEGORIES.map(c => `
+  document.getElementById('catScroll').innerHTML = CATEGORIES.map(c=>`
     <button class="cc ${c.id===activeCat?'act':''}" onclick="switchCat('${c.id}')">
       <span class="ci">${c.icon}</span>
       <span class="cn">${c.label}</span>
     </button>`).join('');
 }
 
-function switchCat(id) {
-  activeCat = id; renderCatChips(); renderAppGrid();
-}
-
-function findItem(id) {
-  for (const c of CATEGORIES) for (const it of c.items) if (it[0]===id) return it;
-  return null;
-}
+function switchCat(id){ activeCat=id; renderCatChips(); renderAppGrid(); }
 
 function renderAppGrid() {
-  const cat = CATEGORIES.find(c => c.id === activeCat);
-  document.getElementById('appGrid').innerHTML = cat.items.map(([id,name,icon,power]) => {
-    const s = selected[id]; const qty = s ? s.qty : 0;
-    return `<div class="ac ${s?'add':''}" onclick="addApp('${id}')">
-      ${qty ? `<span class="abadge">${qty}</span>` : ''}
-      <span class="ai">${icon}</span>
-      <span class="an">${name}</span>
-      <span class="ap">${power} W</span>
+  const cat = CATEGORIES.find(c=>c.id===activeCat);
+  document.getElementById('appGrid').innerHTML = cat.items.map(a=>{
+    const s=st.apps[a.id]; const qty=s?s.qty:0;
+    return `<div class="ac ${s?'add':''}" onclick="addApp('${a.id}')">
+      ${qty?`<span class="abadge">${qty}</span>`:''}
+      <span class="ai">${a.icon}</span>
+      <span class="an">${a.name}</span>
+      <span class="ap">${a.w} W</span>
     </div>`;
   }).join('');
 }
 
+function findApp(id) {
+  for(const c of CATEGORIES) for(const a of c.items) if(a.id===id) return a;
+  return null;
+}
+
 function addApp(id) {
-  const item = findItem(id); if (!item) return;
-  const [, name, icon, power, defH] = item;
-  if (selected[id]) selected[id].qty++;
-  else selected[id] = { id, name, icon, power, qty:1, hours:defH };
+  const a = findApp(id); if(!a) return;
+  if(st.apps[id]) st.apps[id].qty++;
+  else st.apps[id]={qty:1,hours:a.h};
   renderAppGrid(); updateFloatBar(); updateBadge();
 }
 
 function updateBadge() {
-  const n = Object.keys(selected).length;
+  const n = Object.keys(st.apps).length;
   const b = document.getElementById('appBadge');
-  b.textContent = n; b.style.display = n ? 'flex' : 'none';
+  b.textContent=n; b.style.display=n?'flex':'none';
+}
+
+function calcTotal() {
+  let s=0;
+  for(const [id,sel] of Object.entries(st.apps)){
+    const a=findApp(id); if(a&&sel.qty>0) s+=a.w*sel.qty*sel.hours/1000;
+  }
+  return s;
 }
 
 function updateFloatBar() {
-  const n   = Object.keys(selected).length;
-  const wh  = calcTotal();
-  const bar = document.getElementById('floatBar');
-  bar.classList.toggle('hidden', n === 0 || curView !== 1);
-  document.getElementById('fbCount').textContent = n + ' appareil' + (n>1?'s':'');
-  document.getElementById('fbVal').textContent   = fmtWh(wh);
+  const n=Object.keys(st.apps).length;
+  const kwh=calcTotal();
+  const bar=document.getElementById('floatBar');
+  bar.classList.toggle('hidden', n===0||st.curView!==2);
+  document.getElementById('fbCount').textContent=n+' appareil'+(n>1?'s':'');
+  document.getElementById('fbVal').textContent=kwh.toFixed(2)+' kWh/j';
 }
 
-/* ══════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    VIEW 3 — RÉSULTATS
-══════════════════════════════════════════════════ */
-function renderResults() {
-  const el = document.getElementById('resultsContent');
-  const n  = Object.keys(selected).length;
+══════════════════════════════════════════ */
+function pickPack(kwh){
+  if(kwh<=5)  return PACKS[0];
+  if(kwh<=12) return PACKS[1];
+  if(kwh<=25) return PACKS[2];
+  return PACKS[3];
+}
 
-  if (!n) {
-    el.innerHTML = `<div class="empty-r">
-      <span class="ei">☀️</span>
-      <p>Vous n'avez pas encore sélectionné d'appareils.</p>
-      <button onclick="goView(1)">← Choisir mes appareils</button>
+function aiText(pack, kwh) {
+  const b=BUILDINGS.find(x=>x.id===st.building);
+  const o=OBJECTIVES.find(x=>x.id===st.objective);
+  let txt=`Le <strong>Pack ${pack.name}</strong> est recommandé`;
+  if(b) txt+=` pour votre ${b.label.toLowerCase()}`;
+  const climQty=st.apps['clim']?st.apps['clim'].qty:0;
+  if(climQty) txt+=` avec ${climQty} climatiseur${climQty>1?'s':''} 9000 BTU`;
+  const objMap={
+    anticoupure:'une continuité parfaite lors des coupures EDG',
+    clim:'une climatisation disponible jour et nuit',
+    nuit:'une autonomie nocturne complète',
+    complete:'une indépendance totale vis-à-vis d\'EDG',
+    premium:'une expérience énergétique premium sans compromis',
+  };
+  if(o) txt+=`. Ce pack assure ${objMap[o.id]||'une autonomie adaptée'}`;
+  txt+=`. Avec <strong>${pack.kwc} kWc</strong> de panneaux et <strong>${pack.bat} kWh</strong> de batteries Dawnice LiFePO4, votre consommation de <strong>${kwh.toFixed(1)} kWh/jour</strong> est couverte.`;
+  return txt;
+}
+
+function calcAndGoResult() {
+  const kwh=calcTotal();
+  if(kwh===0){ showToast('⚠️ Ajoutez des appareils d\'abord.'); goView(2); return; }
+  renderResults(kwh);
+
+  const views=document.querySelectorAll('.view');
+  views.forEach((v,i)=>{
+    v.classList.remove('act','prv');
+    if(i===3) v.classList.add('act');
+    else if(i<3) v.classList.add('prv');
+  });
+  document.querySelectorAll('.ni').forEach((n,i)=>n.classList.toggle('act',i===3));
+  document.getElementById('stepLabel').textContent=VIEW_LABELS[3];
+  DOT_LABELS.forEach((id,i)=>{
+    const d=document.getElementById(id);
+    d.className='dot'+(i===3?' cur':' done');
+  });
+  st.curView=3;
+  document.getElementById('floatBar').classList.add('hidden');
+}
+
+function renderResults(kwh) {
+  const pack=pickPack(kwh);
+  const el=document.getElementById('resContent');
+
+  // Update sheet summary
+  document.getElementById('shSum').innerHTML=`<strong>Pack recommandé :</strong> ${pack.name} — ${kwh.toFixed(2)} kWh/j — à partir de ${pack.price} GNF`;
+
+  const appRows=Object.entries(st.apps).filter(([,s])=>s.qty>0).map(([id,s])=>{
+    const a=findApp(id); if(!a) return '';
+    return `<div class="si">
+      <span class="si-ic">${a.icon}</span>
+      <div class="si-nm">${a.name}<div class="si-qty">${s.qty}× · ${s.hours}h/j</div></div>
+      <span class="si-val">${(a.w*s.qty*s.hours/1000).toFixed(2)} kWh</span>
     </div>`;
-    return;
-  }
+  }).join('');
 
-  const totalWh  = calcTotal();
-  const comp     = calcComp(totalWh);
-  const region   = REGIONS[cfg.region];
-  const coverage = Math.round((comp.dailyProd / totalWh) * 100);
-  const covColor = coverage>=100?'var(--grn)':coverage>=80?'var(--acc)':'var(--red)';
-  const bnrCls   = coverage>=100?'ok':coverage>=80?'warn':'err';
-  const bnrMsg   = coverage>=110?'✅ Le kit couvre largement votre besoin.'
-                 : coverage>=100?'✅ Le kit couvre exactement votre consommation.'
-                 : coverage>=80 ?'⚠️ Couverture partielle – pensez à limiter certains usages.'
-                 :               '❌ Kit insuffisant – augmentez l\'autonomie ou réduisez les appareils.';
+  el.innerHTML=`
+    <!-- Result hero -->
+    <div class="res-hero-m">
+      <div class="rhl">Votre besoin énergétique</div>
+      <div class="rhk">${kwh.toFixed(1)}</div>
+      <div class="rhu">kWh / jour</div>
+      <div class="rhc">${pack.name} · ${pack.kwc} kWc · ${pack.bat} kWh Dawnice</div>
+    </div>
 
-  const maxBar = Math.max(totalWh, comp.dailyProd, 1);
-  const prodPct  = Math.min(comp.dailyProd/maxBar*100,100);
-  const consoPct = Math.min(totalWh/maxBar*100,100);
-  const consoClass = totalWh > comp.dailyProd ? 'over' : 'conso';
-
-  const comps = [
-    `${comp.panelQty} × Panneau solaire ${comp.panelW}W monocristallin`,
-    `${comp.batQty} × Batterie ${comp.sysType==='ac'?'GEL':'AGM'} ${comp.batAh}Ah ${comp.voltage}V`,
-    `1 × Régulateur MPPT ${comp.ctrlA}A`,
-    ...(comp.sysType==='ac'?[`1 × Onduleur pur sinus ${comp.invW}W`]:[]),
-    `Câbles, connecteurs &amp; fixations inclus`,
-  ].map(c=>`<li><span class="ck">✓</span>${c}</li>`).join('');
-
-  const appLines = Object.values(selected).map(a=>
-    `<div class="si">
-      <span class="si-icon">${a.icon}</span>
-      <div class="si-name">${a.name}<div class="si-qty">${a.qty}× — ${a.hours}h/j</div></div>
-      <span class="si-val">${Math.round(a.power*a.qty*a.hours)} Wh</span>
-    </div>`).join('');
-
-  const costItems = [
-    [`Panneaux solaires (${comp.panelQty}×${comp.panelW}W)`, comp.pricePanel],
-    [`Batteries (${comp.batQty}×${comp.batAh}Ah)`, comp.priceBat],
-    [`Régulateur MPPT ${comp.ctrlA}A`, comp.priceCtrl],
-    ...(comp.sysType==='ac'?[[`Onduleur ${comp.invW}W`,comp.priceInv]]:[]),
-    [`Câbles & accessoires (15%)`, comp.priceAccess],
-  ].map(([l,v])=>`<div class="cl"><span>${l}</span><strong>${fmtGNF(v)}</strong></div>`).join('');
-
-  el.innerHTML = `
-    <!-- Barres énergie -->
-    <div class="meter">
-      <div class="mrow">
-        <span class="mlbl">☀️ Production kit</span>
-        <div class="mtrk"><div class="mfill prod" style="width:${prodPct}%"></div></div>
-        <span class="mval">${fmtWh(comp.dailyProd)}</span>
+    <!-- Pack card -->
+    <div class="pack-card-m">
+      <div class="pkm-hd">
+        <div class="pkm-badge">🌟 Recommandé</div>
+        <span class="pkm-rec">✓ Idéal pour vous</span>
       </div>
-      <div class="mrow">
-        <span class="mlbl">⚡ Consommation</span>
-        <div class="mtrk"><div class="mfill ${consoClass}" style="width:${consoPct}%"></div></div>
-        <span class="mval">${fmtWh(totalWh)}</span>
+      <div class="pkm-name">${pack.name}</div>
+      <div class="pkm-desc">${pack.desc}</div>
+      <div class="pkm-specs">
+        <div class="spec-it"><div class="sil">Onduleur</div><div class="siv">${pack.inv} <span class="siu">kW</span></div></div>
+        <div class="spec-it"><div class="sil">Panneaux</div><div class="siv">${pack.kwc} <span class="siu">kWc</span></div></div>
+        <div class="spec-it"><div class="sil">Batterie</div><div class="siv">${pack.bat} <span class="siu">kWh</span></div></div>
+        <div class="spec-it"><div class="sil">Technologie</div><div class="siv" style="font-size:.78rem">LiFePO4</div></div>
+      </div>
+      <div class="pkm-price">
+        <div><div class="pf">À partir de</div><div class="pv">${pack.price} <span class="pc">GNF</span></div></div>
+        <div class="pr">Pose incluse<br>Garantie 10 ans</div>
       </div>
     </div>
 
-    <!-- Kit card -->
-    <div class="kit-card-m">
-      <span class="kcm-badge">Kit recommandé</span>
-      <div class="kcm-name">${kitLabel(comp)}</div>
-      <div class="kcm-sub">Système ${comp.sysType==='ac'?'220V avec onduleur':'12V DC'} — ${cfg.autonomy} j d'autonomie</div>
-      <ul class="kcm-comps">${comps}</ul>
-      <div class="kcm-price">
-        <div class="kcm-gnf">${fmtGNF(comp.totalPrice)}</div>
-        <div class="kcm-usd">≈ ${fmtUSD(comp.totalPrice)} USD</div>
-        <div class="kcm-note">Prix indicatif — pose non incluse</div>
-      </div>
+    <!-- AI -->
+    <div class="ai-box">
+      <div class="ai-hd"><span class="ai-chip">IA</span> Analyse personnalisée</div>
+      <p class="ai-txt">${aiText(pack,kwh)}</p>
     </div>
 
-    <!-- Couverture -->
-    <div class="cov-card">
-      <div class="covh">
-        <span class="cl">Couverture solaire</span>
-        <span class="cp-pct" style="color:${covColor}">${coverage}%</span>
-      </div>
-      <div class="cov-trk">
-        <div class="cov-fill" style="width:${Math.min(coverage,100)}%;background:${covColor}"></div>
-      </div>
-    </div>
-
-    <div class="bnr ${bnrCls}">${bnrMsg}</div>
-
-    <!-- Stats -->
-    <div class="stats2">
-      <div class="stat-m"><div class="sv">${fmtWh(totalWh)}</div><div class="sl">Conso/jour</div></div>
-      <div class="stat-m"><div class="sv">${fmtWh(comp.dailyProd)}</div><div class="sl">Production/jour</div></div>
-      <div class="stat-m"><div class="sv">${comp.panelW*comp.panelQty}W</div><div class="sl">Puissance panneaux</div></div>
-      <div class="stat-m"><div class="sv">${region[cfg.season]}h</div><div class="sl">Soleil/jour</div></div>
-    </div>
-
-    <!-- Appareils sélectionnés -->
+    <!-- Appareils -->
     <div class="accord" id="accApps">
-      <div class="accord-hd" onclick="toggleAccord()">
-        <span>📋 Appareils sélectionnés (${n})</span>
+      <div class="accord-hd" onclick="toggleAcc()">
+        <span>📋 Mes appareils (${Object.values(st.apps).filter(s=>s.qty>0).length})</span>
         <span class="accord-arr" id="accArr">▼</span>
       </div>
       <div class="accord-bd" id="accBd">
-        <div class="accord-inner">${appLines}</div>
+        <div class="accord-in">${appRows||'<p style="font-size:.8rem;color:var(--muted)">Aucun appareil.</p>'}</div>
       </div>
     </div>
 
-    <!-- Détail coût -->
-    <div class="cost-card">
-      <h4>Détail du devis estimatif</h4>
-      ${costItems}
-      <div class="cl tot"><span>Total estimé</span><strong>${fmtGNF(comp.totalPrice)}</strong></div>
+    <!-- All packs -->
+    <div class="packs-sec">
+      <div class="ph">Tous nos packs INNOVEA</div>
+      <div class="packs-scroll">
+        ${PACKS.map(p=>`
+        <div class="mini-pk ${p.id===pack.id?'ap':''}">
+          <div class="mpn">${p.name}</div>
+          <div class="mps">🔌 ${p.inv} kW</div>
+          <div class="mps">☀️ ${p.kwc} kWc</div>
+          <div class="mps">🔋 ${p.bat} kWh</div>
+          <div class="mpp">Dès ${p.price} GNF</div>
+        </div>`).join('')}
+      </div>
     </div>
 
     <!-- CTA -->
-    <div class="res-ctas">
-      <button class="ctam wa" onclick="openSheet()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Envoyer le devis par WhatsApp
+    <div class="cta-block">
+      <button class="btn-wa" onclick="openSheet()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Recevoir mon devis sur WhatsApp
       </button>
-      <button class="ctam pr" onclick="openSheet()">📩 Envoyer par Email</button>
-      <button class="ctam sk" onclick="goView(1)">← Modifier mes appareils</button>
-    </div>`;
+      <button class="btn-sec" onclick="goView(2)">← Modifier mes appareils</button>
+      <div class="contact-inf">
+        <strong>📞 621 38 74 66</strong>
+        📍 Tayouah marché, Conakry
+      </div>
+    </div>
 
-  // Maj résumé du sheet
-  updateSheetSummary(totalWh, comp);
+    <!-- Pédagogie -->
+    <div class="edu-sec">
+      <div class="edu-hd">
+        <h3>📚 Comprendre l'énergie solaire</h3>
+        <p>Ce qu'il faut savoir avant votre installation</p>
+      </div>
+      <div class="edu-tabs">
+        <div class="edu-tab active" onclick="showTab('gl',this)">Glossaire</div>
+        <div class="edu-tab" onclick="showTab('fl',this)">Fonctionnement</div>
+        <div class="edu-tab" onclick="showTab('tc',this)">Technique</div>
+      </div>
+      <div class="edu-content">
+        <div class="edu-pane active" id="pane-gl">
+          <div class="edu-term"><span class="edu-badge">W</span><span class="edu-def"><strong>Watt</strong> — puissance instantanée. Ventilateur = 50W, clim 9000 BTU = 900W.</span></div>
+          <div class="edu-term"><span class="edu-badge">kWh</span><span class="edu-def"><strong>Kilowatt-heure</strong> — énergie consommée. 1 kWh = 1000W pendant 1 heure.</span></div>
+          <div class="edu-term"><span class="edu-badge">kWc</span><span class="edu-def"><strong>Watt-crête</strong> — puissance max d'un panneau en plein soleil guinéen.</span></div>
+          <div class="edu-term"><span class="edu-badge">Batterie</span><span class="edu-def">Stocke l'énergie du jour pour la nuit et les coupures EDG.</span></div>
+          <div class="edu-term"><span class="edu-badge">Onduleur</span><span class="edu-def">Convertit le courant DC des panneaux en 220V AC pour vos appareils.</span></div>
+        </div>
+        <div class="edu-pane" id="pane-fl">
+          <div class="ef-row">
+            <div class="ef-step"><span class="efi">☀️</span><div class="efl">Panneaux</div><div class="efd">Captent le soleil</div></div>
+            <span class="ef-arr">→</span>
+            <div class="ef-step"><span class="efi">⚡</span><div class="efl">Onduleur</div><div class="efd">→ 220V</div></div>
+            <span class="ef-arr">→</span>
+            <div class="ef-step"><span class="efi">🔋</span><div class="efl">Batterie</div><div class="efd">Stockage</div></div>
+            <span class="ef-arr">→</span>
+            <div class="ef-step"><span class="efi">🏠</span><div class="efl">Maison</div><div class="efd">24h/24</div></div>
+          </div>
+          <div style="background:var(--light);border-radius:9px;padding:11px 13px;font-size:.78rem;color:var(--text);line-height:1.6">
+            🌞 <strong>Le jour :</strong> les panneaux alimentent et chargent la batterie.<br>
+            🌙 <strong>La nuit :</strong> la batterie prend le relais.<br>
+            ⚡ <strong>Coupure EDG :</strong> votre installation continue normalement.
+          </div>
+        </div>
+        <div class="edu-pane" id="pane-tc">
+          <div class="edu-term"><span class="edu-badge">Simultanéité</span><span class="edu-def">Tous vos appareils ne fonctionnent pas en même temps. L'onduleur doit couvrir la puissance maximale simultanée.</span></div>
+          <div class="edu-term"><span class="edu-badge">Autonomie</span><span class="edu-def">Durée de fonctionnement sans soleil. 1 à 3 jours selon la batterie choisie.</span></div>
+          <div class="edu-term"><span class="edu-badge">Recharge</span><span class="edu-def">Une batterie Dawnice LiFePO4 se recharge en 4–6h de plein soleil guinéen.</span></div>
+          <div class="edu-term"><span class="edu-badge">Clim 9000 BTU</span><span class="edu-def">≈ 900W, environ 4,8 kWh/jour pour 6h. À dimensionner en priorité.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dawnice -->
+    <div class="dawnice-sec">
+      <div class="daw-badge">⚡ Partenaire Officiel</div>
+      <h3>Pourquoi Dawnice ?</h3>
+      <p>Batteries LiFePO4 conçues pour les conditions tropicales africaines. Durée de vie exceptionnelle, 10 ans de garantie.</p>
+      <div class="daw-stats">
+        <div class="dstat"><div class="dv">8 000</div><div class="dl">Cycles</div></div>
+        <div class="dstat"><div class="dv">LiFePO4</div><div class="dl">Lithium</div></div>
+        <div class="dstat"><div class="dv">10 ans</div><div class="dl">Garantie</div></div>
+      </div>
+      <div class="daw-flags">
+        <div class="flag-it">🇳🇬 Nigeria</div>
+        <div class="flag-it">🇲🇱 Mali</div>
+        <div class="flag-it">🇨🇮 Côte d'Ivoire</div>
+        <div class="flag-it">🇩🇪 Allemagne</div>
+        <div class="flag-it">🇦🇺 Australie</div>
+        <div class="flag-it">🇦🇹 Autriche</div>
+      </div>
+    </div>
+    <div style="height:10px"></div>`;
 }
 
-function toggleAccord() {
-  const bd  = document.getElementById('accBd');
-  const arr = document.getElementById('accArr');
-  const open = bd.classList.toggle('open');
-  arr.style.transform = open ? 'rotate(180deg)' : '';
+function toggleAcc(){
+  const bd=document.getElementById('accBd');
+  const arr=document.getElementById('accArr');
+  const open=bd.classList.toggle('open');
+  arr.style.transform=open?'rotate(180deg)':'';
 }
 
-/* ══════════════════════════════════════════════════
-   CALCULS
-══════════════════════════════════════════════════ */
-function calcTotal() {
-  return Object.values(selected).reduce((s,a)=>s+a.power*a.qty*a.hours, 0);
+/* ══════════════════════════════════════════
+   PÉDAGOGIE TABS
+══════════════════════════════════════════ */
+function showTab(id,el){
+  document.querySelectorAll('.edu-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.edu-pane').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const p=document.getElementById('pane-'+id);
+  if(p) p.classList.add('active');
 }
 
-function calcPeak() {
-  return Object.values(selected).reduce((s,a)=>s+a.power*a.qty, 0);
+/* ══════════════════════════════════════════
+   BOTTOM SHEET
+══════════════════════════════════════════ */
+function openSheet(){ document.getElementById('sheetOv').classList.add('show'); }
+function closeSheet(e){ if(e.target===document.getElementById('sheetOv')) closeSheetDirect(); }
+function closeSheetDirect(){ document.getElementById('sheetOv').classList.remove('show'); }
+
+function submitWA(){
+  const name=document.getElementById('fN').value.trim();
+  const phone=document.getElementById('fP').value.trim();
+  if(!name||!phone){ showToast('⚠️ Nom et téléphone requis.'); return; }
+  const kwh=calcTotal();
+  const pack=pickPack(kwh);
+  const b=BUILDINGS.find(x=>x.id===st.building);
+  const lines=Object.entries(st.apps).filter(([,s])=>s.qty>0).map(([id,s])=>{
+    const a=findApp(id); if(!a) return '';
+    return `  • ${s.qty}× ${a.name} (${a.w}W × ${s.hours}h = ${(a.w*s.qty*s.hours/1000).toFixed(2)} kWh/j)`;
+  }).join('\n');
+  const msg=`🌞 *INNOVEA GROUP – Demande de devis*
+
+Bonjour, j'ai réalisé une simulation.
+
+👤 *Client :* ${name}
+📞 *Tél :* ${phone}
+🏠 *Bâtiment :* ${b?b.label:'Non précisé'}
+⚡ *Besoin :* ${kwh.toFixed(2)} kWh/jour
+🕐 *Rappel souhaité :* ${document.getElementById('fT').value}
+
+📋 *Appareils :*
+${lines||'  Aucun'}
+
+🎯 *Pack recommandé : ${pack.name}*
+  • Onduleur ${pack.inv} kW
+  • ${pack.kwc} kWc panneaux
+  • Batterie Dawnice LiFePO4 ${pack.bat} kWh
+  • À partir de ${pack.price} GNF
+
+Merci de me contacter !`;
+  saveLead({ nom: name, telephone: phone, ville: document.getElementById('fC').value.trim(), rappel: document.getElementById('fT').value });
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
+  closeSheetDirect();
+  showToast('✅ Message WhatsApp envoyé !');
 }
 
-function calcComp(totalWh) {
-  const { region, season, autonomy, sysType, voltage } = cfg;
-  const psh     = REGIONS[region][season];
-  const EFF     = sysType==='ac' ? 0.70 : 0.78;
-  const DOD     = 0.50, BEFF = 0.85;
-
-  const reqPW   = totalWh / (psh * EFF);
-  const reqBAh  = (totalWh * autonomy) / (voltage * DOD * BEFF);
-  const peakW   = calcPeak();
-
-  // Panels
-  let panelW=0, panelQty=0;
-  for (const pw of [400,300,200,150,100]) {
-    for (let n=1;n<=20;n++) { if(pw*n>=reqPW){panelW=pw;panelQty=n;break} }
-    if(panelQty) break;
-  }
-  if (!panelQty) { panelW=400; panelQty=Math.ceil(reqPW/400); }
-
-  // Batteries
-  let batAh=100, batQty=1;
-  for (const ba of [200,150,100]) {
-    for (let n=1;n<=20;n++) { if(ba*n>=reqBAh){batAh=ba;batQty=n;break} }
-    if(batAh*batQty>=reqBAh) break;
-  }
-  if(batAh*batQty<reqBAh){batAh=200;batQty=Math.ceil(reqBAh/200);}
-
-  // Ctrl
-  const ctrlRaw = panelW*panelQty/voltage*1.25;
-  let ctrlA=80;
-  for (const ca of [20,30,40,60,80]) { if(ca>=ctrlRaw){ctrlA=ca;break} }
-
-  // Inv
-  let invW=0;
-  if (sysType==='ac') {
-    const invRaw=peakW*1.5;
-    for (const iv of [600,1000,1500,2000,3000,5000]) { if(iv>=invRaw){invW=iv;break} }
-    if(!invW) invW=5000;
-  }
-
-  const pricePanel = (PRICES['panel'+panelW]||0)*panelQty;
-  const priceBat   = (PRICES['bat'+batAh+'_'+voltage]||0)*batQty;
-  const priceCtrl  = PRICES['ctrl'+ctrlA]||0;
-  const priceInv   = sysType==='ac'?(PRICES['inv'+invW]||0):0;
-  const priceAccess= Math.round((pricePanel+priceBat+priceCtrl+priceInv)*0.15);
-  const totalPrice = pricePanel+priceBat+priceCtrl+priceInv+priceAccess;
-  const dailyProd  = Math.round(panelW*panelQty*psh*EFF);
-
-  return { panelW,panelQty,batAh,batQty,ctrlA,invW,sysType,voltage,
-           pricePanel,priceBat,priceCtrl,priceInv,priceAccess,totalPrice,dailyProd };
-}
-
-/* ══════════════════════════════════════════════════
-   SHEET — DEVIS
-══════════════════════════════════════════════════ */
-function openSheet() {
-  document.getElementById('sheetOv').classList.add('show');
-}
-function closeSheet(e) {
-  if (e.target===document.getElementById('sheetOv')) closeSheetDirect();
-}
-function closeSheetDirect() {
-  document.getElementById('sheetOv').classList.remove('show');
-}
-
-function updateSheetSummary(totalWh, comp) {
-  document.getElementById('shSum').innerHTML =
-    `<strong>Résumé :</strong> ${kitLabel(comp)} — ${fmtWh(totalWh)} — <strong>${fmtGNF(comp.totalPrice)}</strong>`;
-}
-
-function prevPhone(val) {
-  const p = document.getElementById('phPrev');
-  if (!val.trim()) { p.textContent=''; return; }
-  p.textContent = '📱 +' + fmtWANum(val);
-}
-
-function fmtWANum(raw) {
-  let n=raw.replace(/\D/g,'');
-  if(n.startsWith('00')) n=n.slice(2);
-  if(n.startsWith('0'))  n='224'+n.slice(1);
-  if(n.length<=9)        n='224'+n;
-  return n;
-}
-
-function getFields() {
-  return {
-    name:  document.getElementById('fName').value.trim(),
-    phone: document.getElementById('fPhone').value.trim(),
-    city:  document.getElementById('fCity').value.trim(),
-    email: document.getElementById('fEmail').value.trim(),
-    note:  document.getElementById('fNote').value.trim(),
-  };
-}
-
-function validate(needPhone, needEmail) {
-  const { name, phone, city, email } = getFields();
-  if (!name||!city) { toast('⚠️ Veuillez renseigner le nom et la ville.'); return false; }
-  if (needPhone && !phone) { toast('⚠️ Veuillez entrer un numéro WhatsApp.'); return false; }
-  if (needEmail && !email) { toast('⚠️ Veuillez entrer une adresse email.'); return false; }
-  return true;
-}
-
-/* ══════════════════════════════════════════════════
-   PDF GENERATION
-══════════════════════════════════════════════════ */
-function buildPDF(name, city, phone) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:'mm', format:'a4' });
-  const totalWh = calcTotal();
-  const comp    = calcComp(totalWh);
-  const region  = REGIONS[cfg.region];
-  const cov     = Math.round((comp.dailyProd/totalWh)*100);
-  const date    = new Date().toLocaleDateString('fr-FR');
-  const devNum  = 'DEV-'+Date.now().toString().slice(-6);
-  const autoD   = cfg.autonomy;
-  const saison  = cfg.season==='dry'?'Saison seche':'Saison des pluies';
-  const W=210,M=14,CW=W-2*M; let y=0;
-  const F=(st,sz)=>{doc.setFont('helvetica',st);doc.setFontSize(sz)};
-  const TC=(...c)=>doc.setTextColor(...c);
-  const FC=(...c)=>doc.setFillColor(...c);
-  const pGNF=v=>new Intl.NumberFormat('fr-FR').format(Math.round(v))+' GNF';
-
-  FC(26,58,92);doc.rect(0,0,W,36,'F');
-  FC(206,17,38);doc.rect(W-18,0,6,36,'F');
-  FC(252,209,22);doc.rect(W-12,0,6,36,'F');
-  FC(0,148,96);doc.rect(W-6,0,6,36,'F');
-  FC(252,209,22);doc.circle(M+8,18,7,'F');
-  F('bold',16);TC(255,255,255);doc.text(BUSINESS.name,M+20,14);
-  F('bold',9);TC(252,209,22);doc.text('DEVIS KIT PHOTOVOLTAIQUE SUR MESURE',M+20,21);
-  F('normal',7.5);TC(180,200,220);
-  doc.text('No. '+devNum+'   |   Date : '+date+'   |   Validite : 30 jours',M+20,28);
-  y=44;
-
-  FC(240,244,248);doc.roundedRect(M,y,CW,22,2,2,'F');
-  doc.setDrawColor(209,217,224);doc.setLineWidth(0.3);
-  doc.line(M+CW*0.5,y+3,M+CW*0.5,y+19);
-  F('bold',7);TC(107,114,128);doc.text('CLIENT',M+4,y+6);doc.text('LOCALISATION',M+CW*0.52,y+6);
-  F('bold',10);TC(44,62,80);doc.text(name,M+4,y+13);doc.text(city,M+CW*0.52,y+13);
-  F('normal',8.5);TC(107,114,128);
-  if(phone) doc.text('Tel : '+phone,M+4,y+19.5);
-  doc.text(region.label,M+CW*0.52,y+19.5);
-  y+=28;
-
-  F('bold',10);TC(232,117,26);doc.text('APPAREILS SELECTIONNES',M,y);
-  F('normal',7.5);TC(107,114,128);
-  doc.text(region.label+'  |  '+saison+'  |  '+region[cfg.season]+'h/j',M,y+5);
-  y+=9;
-  FC(26,58,92);doc.rect(M,y,CW,7,'F');
-  F('bold',7.5);TC(255,255,255);
-  doc.text('Appareil',M+3,y+4.8);doc.text('Qte',M+CW*0.60,y+4.8);
-  doc.text('Puissance',M+CW*0.67,y+4.8);doc.text('Duree/j',M+CW*0.82,y+4.8);
-  doc.text('Wh/jour',M+CW-2,y+4.8,{align:'right'});
-  y+=7;
-  let ri=0;
-  Object.values(selected).forEach(a=>{
-    const d=Math.round(a.power*a.qty*a.hours);
-    if(ri%2===0){FC(248,250,252);doc.rect(M,y,CW,6,'F');}
-    F('normal',8);TC(44,62,80);
-    doc.text(a.name,M+3,y+4);doc.text(String(a.qty),M+CW*0.62,y+4);
-    doc.text(a.power+'W',M+CW*0.68,y+4);doc.text(a.hours+'h',M+CW*0.83,y+4);
-    F('bold',8);TC(232,117,26);doc.text(d+' Wh',M+CW-2,y+4,{align:'right'});
-    y+=6;ri++;
-  });
-  FC(44,62,80);doc.rect(M,y,CW,7.5,'F');
-  F('bold',9);TC(255,255,255);doc.text('CONSOMMATION TOTALE',M+3,y+5);
-  TC(252,209,22);doc.text(Math.round(totalWh)+' Wh/jour',M+CW-2,y+5,{align:'right'});
-  y+=13;
-
-  F('bold',10);TC(232,117,26);doc.text('KIT SOLAIRE RECOMMANDE',M,y);y+=5;
-  FC(232,117,26);doc.roundedRect(M,y,80,8,2,2,'F');
-  F('bold',9);TC(255,255,255);doc.text(kitLabel(comp),M+40,y+5.5,{align:'center'});
-  F('normal',7.5);TC(107,114,128);
-  doc.text('Systeme '+(comp.sysType==='ac'?'220V avec onduleur':'12V DC')+'  —  '+autoD+' j d\'autonomie',M+83,y+5.5);
-  y+=13;
-  FC(26,58,92);doc.rect(M,y,CW,7,'F');
-  F('bold',7.5);TC(255,255,255);
-  doc.text('Composant',M+3,y+4.8);doc.text('Prix unit.',M+CW*0.60,y+4.8);
-  doc.text('Qte',M+CW*0.79,y+4.8);doc.text('Total GNF',M+CW-2,y+4.8,{align:'right'});
-  y+=7;
-  const cItems=[
-    ['Panneau solaire '+comp.panelW+'W monocristallin',PRICES['panel'+comp.panelW]||0,comp.panelQty,comp.pricePanel],
-    ['Batterie '+(comp.sysType==='ac'?'GEL':'AGM')+' '+comp.batAh+'Ah '+comp.voltage+'V',PRICES['bat'+comp.batAh+'_'+comp.voltage]||0,comp.batQty,comp.priceBat],
-    ['Regulateur MPPT '+comp.ctrlA+'A',PRICES['ctrl'+comp.ctrlA]||0,1,comp.priceCtrl],
-    ...(comp.sysType==='ac'?[['Onduleur pur sinus '+comp.invW+'W',PRICES['inv'+comp.invW]||0,1,comp.priceInv]]:[]),
-    ['Cables, connecteurs et fixations (15%)','','',comp.priceAccess],
-  ];
-  cItems.forEach(([label,unit,qty,total],i)=>{
-    if(i%2===0){FC(248,250,252);doc.rect(M,y,CW,6,'F');}
-    F('normal',8);TC(44,62,80);doc.text(label,M+3,y+4);
-    if(unit) doc.text(pGNF(unit),M+CW*0.61,y+4);
-    if(qty) doc.text(String(qty),M+CW*0.80,y+4);
-    F('bold',8);TC(26,58,92);doc.text(pGNF(total),M+CW-2,y+4,{align:'right'});
-    y+=6;
-  });
-  FC(232,117,26);doc.rect(M,y,CW,9,'F');
-  F('bold',10);TC(255,255,255);doc.text('TOTAL ESTIME',M+3,y+6);
-  doc.text(pGNF(comp.totalPrice),M+CW-2,y+6,{align:'right'});
-  y+=12;
-  F('normal',7.5);TC(107,114,128);
-  doc.text('Equiv. USD : ~'+fmtUSD(comp.totalPrice)+' USD   |   Production : '+comp.dailyProd+' Wh/j   |   Couverture : '+cov+'%',M,y);
-  y+=8;
-  FC(255,243,205);doc.roundedRect(M,y,CW,11,2,2,'F');
-  doc.setDrawColor(252,209,22);doc.setLineWidth(0.4);
-  doc.roundedRect(M,y,CW,11,2,2,'S');
-  F('bold',7.5);TC(125,90,0);doc.text('NOTE',M+4,y+5);
-  F('normal',7);TC(100,70,0);
-  doc.text('Prix indicatif, pose et transport non inclus. Stock sous reserve. Valable 30 jours.',M+4,y+9);
-  y+=15;
-  FC(26,58,92);doc.rect(0,283,W,14,'F');
-  F('normal',7.5);TC(180,200,220);
-  doc.text(BUSINESS.name+'   |   +'+BUSINESS.whatsapp+'   |   '+BUSINESS.email+'   |   '+BUSINESS.website,W/2,291,{align:'center'});
-  return doc;
-}
-
-async function sharePDF(doc, name, onDownload) {
-  const blob = doc.output('blob');
-  const fname = 'Devis-'+name.replace(/\s+/g,'-')+'.pdf';
-  const file = new File([blob], fname, { type:'application/pdf' });
-  if (navigator.canShare && navigator.canShare({ files:[file] })) {
-    await navigator.share({ files:[file], title:'Devis Solaire – '+name });
-    return 'shared';
-  } else {
-    doc.save(fname); onDownload(); return 'downloaded';
-  }
-}
-
-async function sendWA() {
-  if (!validate(true, false)) return;
-  const { name, phone, city, note } = getFields();
-  const btn = document.getElementById('btnWA');
-  btn.classList.add('loading'); btn.textContent = '⏳ Génération PDF…';
-  try {
-    const doc = buildPDF(name, city, phone);
-    const mode = await sharePDF(doc, name, () => {
-      const waNum = fmtWANum(phone);
-      const comp  = calcComp(calcTotal());
-      const msg   = `Bonjour ${name},\n\nVeuillez trouver ci-joint votre devis kit solaire.\n\nKit : ${kitLabel(comp)}\nEstimation : ${new Intl.NumberFormat('fr-FR').format(Math.round(comp.totalPrice))} GNF\n\n${BUSINESS.name}`;
-      window.open('https://wa.me/'+waNum+'?text='+encodeURIComponent(msg),'_blank');
-    });
-    closeSheetDirect();
-    toast(mode==='shared'?'✅ PDF envoyé via WhatsApp !':'✅ PDF téléchargé — WhatsApp ouvert.');
-  } catch(e) {
-    console.error(e); toast('❌ Erreur lors de la génération.');
-  } finally {
-    btn.classList.remove('loading');
-    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Envoyer par WhatsApp';
-  }
-}
-
-async function sendEmail() {
-  if (!validate(false, true)) return;
-  const { name, phone, city, email } = getFields();
-  const btn = document.getElementById('btnEM');
-  btn.classList.add('loading'); btn.textContent = '⏳ Génération PDF…';
-  try {
-    const doc  = buildPDF(name, city, phone);
-    const comp = calcComp(calcTotal());
-    const mode = await sharePDF(doc, name, () => {
-      const sub  = encodeURIComponent('Devis Solaire – '+kitLabel(comp)+' – '+name);
-      const body = encodeURIComponent(
-        'Bonjour '+name+',\n\nVeuillez trouver ci-joint votre devis kit solaire.\n\n'+
-        'Kit : '+kitLabel(comp)+'\nEstimation : '+
-        new Intl.NumberFormat('fr-FR').format(Math.round(comp.totalPrice))+' GNF\n\n'+
-        'Cordialement,\n'+BUSINESS.name+'\n+'+BUSINESS.whatsapp
-      );
-      window.location.href='mailto:'+email+'?subject='+sub+'&body='+body;
-    });
-    closeSheetDirect();
-    toast(mode==='shared'?'✅ PDF partagé par email !':'✅ PDF téléchargé — Email ouvert.');
-  } catch(e) {
-    console.error(e); toast('❌ Erreur lors de la génération.');
-  } finally {
-    btn.classList.remove('loading'); btn.textContent='✉️ Envoyer par Email';
-  }
-}
-
-/* ══════════════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════════════ */
-function kitLabel(comp) {
-  const w=comp.panelW*comp.panelQty;
-  if(w<=150)  return 'Kit Starter '+w+'W';
-  if(w<=400)  return 'Kit Maison '+w+'W';
-  if(w<=800)  return 'Kit Premium '+w+'W';
-  if(w<=1600) return 'Kit Business '+w+'W';
-  return 'Kit Industrie '+w+'W';
-}
-function fmtWh(v) {
-  if(v<1) return '0 Wh/j';
-  if(v>=1000) return (v/1000).toFixed(1)+' kWh/j';
-  return Math.round(v)+' Wh/j';
-}
-function fmtGNF(v) {
-  return new Intl.NumberFormat('fr-GN').format(Math.round(v))+' GNF';
-}
-function fmtUSD(v) {
-  return new Intl.NumberFormat('en-US').format(Math.round(v/USD_RATE));
-}
-
-let toastT;
-function toast(msg) {
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let _tt;
+function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3500);
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3500);
 }
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+renderBuildings();
+renderObjectives();
+renderCatChips();
+renderAppGrid();
 </script>
 </body>
 </html>

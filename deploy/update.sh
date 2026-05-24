@@ -1,13 +1,19 @@
 #!/bin/bash
-# Mise à jour SimulSolaire depuis GitHub
+# Mise à jour INNOVEA GROUP Simulateur depuis GitHub
 APP_DIR="/var/www/simulsolaire"
 
-echo "🔄 Mise à jour SimulSolaire..."
+echo "==> Mise à jour INNOVEA Simulateur..."
 cd "$APP_DIR"
 
-# Force la synchronisation avec GitHub (écrase les modifs locales)
 git fetch origin
 git reset --hard origin/main
 
 chown -R www-data:www-data "$APP_DIR"
-echo "✅ Mise à jour terminée — $(date '+%d/%m/%Y %H:%M')"
+
+# Recharger Nginx si la config a changé
+if nginx -t -c /etc/nginx/nginx.conf 2>/dev/null; then
+  nginx -s reload
+  echo "==> Nginx rechargé"
+fi
+
+echo "==> Mise à jour terminée — $(date '+%d/%m/%Y %H:%M')"

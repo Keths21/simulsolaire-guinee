@@ -29,8 +29,8 @@ server {
     root /var/www/simulsolaire;
     index index.html;
 
-    # ── PocketBase admin UI (assets chargés en chemin absolu /_/) ─
-    location /_/ {
+    # ── PocketBase admin UI (^~ bloque la regex static files) ───────
+    location ^~ /_/ {
         proxy_pass         http://172.23.0.1:8090/_/;
         proxy_http_version 1.1;
         proxy_set_header   Host $host;
@@ -41,7 +41,7 @@ server {
     }
 
     # ── PocketBase REST API (appelé par le frontend JS) ───────────
-    location /_pb/ {
+    location ^~ /_pb/ {
         rewrite ^/_pb/(.*)$ /$1 break;
         proxy_pass         http://172.23.0.1:8090;
         proxy_http_version 1.1;

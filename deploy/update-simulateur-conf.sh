@@ -29,7 +29,18 @@ server {
     root /var/www/simulsolaire;
     index index.html;
 
-    # ── PocketBase API + Admin UI ──────────────────────────────
+    # ── PocketBase admin UI (assets chargés en chemin absolu /_/) ─
+    location /_/ {
+        proxy_pass         http://172.23.0.1:8090/_/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 360s;
+    }
+
+    # ── PocketBase REST API (appelé par le frontend JS) ───────────
     location /_pb/ {
         rewrite ^/_pb/(.*)$ /$1 break;
         proxy_pass         http://172.23.0.1:8090;
@@ -62,4 +73,5 @@ echo "==> simulateur.conf écrit"
 docker exec pbp_nginx nginx -t && docker exec pbp_nginx nginx -s reload
 
 echo "==> Nginx Docker rechargé avec succès"
-echo "==> PocketBase accessible via https://simulateur.innoveagroup.tech/_pb/_/"
+echo "==> PocketBase Admin UI : https://simulateur.innoveagroup.tech/_/"
+echo "==> PocketBase API      : https://simulateur.innoveagroup.tech/_pb/api/"

@@ -25,8 +25,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Ne pas intercepter les appels API PocketBase
   if (e.request.url.includes('/_pb/')) return;
+  if (e.request.url.includes('/_/')) return;
 
   e.respondWith(
     caches.match(e.request).then(cached => {

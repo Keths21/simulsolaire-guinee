@@ -17,20 +17,17 @@ read -rp "Email admin : " ADMIN_EMAIL
 read -rsp "Mot de passe : " ADMIN_PASS
 echo ""
 
-# ── 1. Authentification (PB v0.22+ et fallback v0.21) ────────────
-AUTH_RESPONSE=$(curl -s -X POST "$PB/api/superusers/auth-with-password" \
-  -H "Content-Type: application/json" \
-  -d "{\"identity\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASS\"}" 2>/dev/null)
-
-TOKEN=$(echo "$AUTH_RESPONSE" | grep -o '"token":"[^"]*"' | head -1 | cut -d'"' -f4)
-
-if [ -z "$TOKEN" ]; then
-  # Fallback ancienne version PocketBase
-  AUTH_RESPONSE=$(curl -s -X POST "$PB/api/admins/auth-with-password" \
+# ── 1. Authentification (essai des 3 endpoints selon version PB) ─
+for ENDPOINT in \
+  "$PB/api/collections/_superusers/auth-with-password" \
+  "$PB/api/superusers/auth-with-password" \
+  "$PB/api/admins/auth-with-password"; do
+  AUTH_RESPONSE=$(curl -s -X POST "$ENDPOINT" \
     -H "Content-Type: application/json" \
     -d "{\"identity\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASS\"}")
   TOKEN=$(echo "$AUTH_RESPONSE" | grep -o '"token":"[^"]*"' | head -1 | cut -d'"' -f4)
-fi
+  [ -n "$TOKEN" ] && break
+done
 
 if [ -z "$TOKEN" ]; then
   echo "ERREUR : Authentification échouée. Vérifiez vos credentials."
